@@ -13,6 +13,8 @@ import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -56,6 +58,8 @@ private fun SheetAction(icon: ImageVector, label: String, onClick: () -> Unit) {
     ListItem(
         headlineContent = { Text(label) },
         leadingContent = { Icon(icon, contentDescription = null) },
+        // ListItem defaults to the surface colour, which differs from the sheet's container.
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = Modifier.clickable(onClick = onClick),
     )
 }

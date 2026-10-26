@@ -18,12 +18,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -202,10 +202,20 @@ private fun HeroCarousel(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(Brush.verticalGradient(0.4f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.85f))),
+                    .background(Brush.verticalGradient(0.35f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.9f))),
             )
             Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
-                AssistChip(onClick = { onMovieClick(pick.movie) }, label = { Text(pick.reason.label(), maxLines = 1) })
+                // Fixed light-on-dark colours: the pill sits on arbitrary artwork in both themes.
+                Surface(shape = RoundedCornerShape(50), color = Color.Black.copy(alpha = 0.6f)) {
+                    Text(
+                        pick.reason.label(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    )
+                }
                 Spacer(Modifier.height(4.dp))
                 Text(
                     pick.movie.title,

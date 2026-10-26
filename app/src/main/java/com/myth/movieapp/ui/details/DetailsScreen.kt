@@ -2,7 +2,11 @@ package com.myth.movieapp.ui.details
 
 import android.content.Intent
 import androidx.core.net.toUri
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -83,6 +87,10 @@ fun DetailsScreen(
     viewModel: DetailsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val scrollState = rememberScrollState()
+    // Once content scrolls under the status bar, back it with a scrim so it stays legible and the
+    // back button doesn't sit on top of the action row.
+    val scrimAlpha by animateFloatAsState(if (scrollState.value > 0) 0.95f else 0f, label = "statusScrim")
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         when (val content = state.content) {
@@ -91,14 +99,22 @@ fun DetailsScreen(
             is DetailsContent.Loaded -> DetailsBody(
                 content = content,
                 state = state,
+                scrollState = scrollState,
                 onFeedback = viewModel::toggleFeedback,
                 onToggleWatchlist = viewModel::toggleWatchlist,
                 onMovieClick = onMovieClick,
             )
         }
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = scrimAlpha))
+                .statusBarsPadding()
+                .height(64.dp),
+        )
         FilledTonalIconButton(
             onClick = onBack,
-            modifier = Modifier.padding(start = 12.dp, top = 40.dp),
+            modifier = Modifier.statusBarsPadding().padding(start = 12.dp, top = 8.dp),
             colors = IconButtonDefaults.filledTonalIconButtonColors(
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
             ),
@@ -112,6 +128,7 @@ fun DetailsScreen(
 private fun DetailsBody(
     content: DetailsContent.Loaded,
     state: DetailsUiState,
+    scrollState: ScrollState,
     onFeedback: (FeedbackType) -> Unit,
     onToggleWatchlist: () -> Unit,
     onMovieClick: (Int) -> Unit,
@@ -120,7 +137,7 @@ private fun DetailsBody(
     val movie = details.movie
     val context = LocalContext.current
 
-    Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 32.dp)) {
+    Column(Modifier.verticalScroll(scrollState).navigationBarsPadding().padding(bottom = 16.dp)) {
         Box {
             AsyncImage(
                 model = TmdbImages.backdrop(movie.backdropPath),
