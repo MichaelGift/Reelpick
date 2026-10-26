@@ -2,7 +2,22 @@
 
 An Android app that learns what you like and builds a personal **For You** feed. Every pick shows a **taste match** and **why it's there** ("Because you liked *Arrival*"), and the app shows you the taste profile it has learned. Built with Jetpack Compose, Hilt, Room and the TMDB API.
 
-<!-- Screenshots / demo GIF: add onboarding, For You, Details and Watchlist captures here. -->
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/04-for-you.jpg" width="200" alt="For You feed with a full-bleed hero, taste match and the reason it was picked"><br><sub><b>For You</b>: match % and why</sub></td>
+    <td align="center"><img src="docs/screenshots/05-top10-taste.jpg" width="200" alt="Ranked Top 10 row and the learned taste profile card"><br><sub><b>Top 10 + taste profile</b></sub></td>
+    <td align="center"><img src="docs/screenshots/06-details.jpg" width="200" alt="Movie details with taste-match card, watchlist and rating controls"><br><sub><b>Details</b>: why it fits you</sub></td>
+    <td align="center"><img src="docs/screenshots/07-search.jpg" width="200" alt="Browsing the Crime genre as a poster grid"><br><sub><b>Search</b>: browse by genre</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-welcome.jpg" width="200" alt="Welcome screen over a drifting poster mosaic"><br><sub><b>Welcome</b></sub></td>
+    <td align="center"><img src="docs/screenshots/02-genres.jpg" width="200" alt="Onboarding step 1: picking genres"><br><sub><b>Pick genres</b></sub></td>
+    <td align="center"><img src="docs/screenshots/03-seeds.jpg" width="200" alt="Onboarding step 2: picking five seed films"><br><sub><b>Pick seed films</b></sub></td>
+    <td align="center"><img src="docs/screenshots/08-watchlist.jpg" width="200" alt="Watchlist poster grid"><br><sub><b>Watchlist</b> (offline)</sub></td>
+  </tr>
+</table>
+
+<sub>Captured on a Pixel emulator (Android 16) with live TMDB data. Saving four crime and drama films shifted the profile, which is why "Crime" appears in the taste card and the matches read 76%.</sub>
 
 ## Design
 

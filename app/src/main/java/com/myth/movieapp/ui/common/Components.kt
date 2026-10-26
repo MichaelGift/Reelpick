@@ -80,6 +80,7 @@ fun PosterImage(
     modifier: Modifier = Modifier,
     sharedKey: String? = null,
     shape: Shape = PosterShape,
+    showPlaceholderIcon: Boolean = true,
 ) {
     Box(
         modifier = modifier
@@ -89,7 +90,9 @@ fun PosterImage(
             .background(MaterialTheme.colorScheme.surfaceContainerHigh),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Outlined.Movie, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+        if (showPlaceholderIcon) {
+            Icon(Icons.Outlined.Movie, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+        }
         AsyncImage(
             model = TmdbImages.poster(path),
             contentDescription = contentDescription,
