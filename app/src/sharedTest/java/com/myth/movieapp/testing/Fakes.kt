@@ -41,20 +41,28 @@ class FakeMovieRepository : MovieRepository {
     var trending: Result<List<Movie>> = Result.success(emptyList())
     val recommendations = mutableMapOf<Int, Result<List<Movie>>>()
     val discover = mutableMapOf<Int, Result<List<Movie>>>()
+    val details = mutableMapOf<Int, Result<MovieDetails>>()
+    var searchResults: (String, Int) -> PagedMovies = { _, page -> PagedMovies(emptyList(), page, page) }
+    val searchQueries = mutableListOf<String>()
     var fetchCount = 0
         private set
 
+    var popular: List<Movie> = emptyList()
+
     override suspend fun genres() = Result.success(genres)
-    override suspend fun popular(page: Int) = Result.success(PagedMovies(emptyList(), 1, 1))
+    override suspend fun popular(page: Int) = Result.success(PagedMovies(popular, 1, 1))
     override suspend fun topRated(page: Int) = Result.success(PagedMovies(emptyList(), 1, 1))
     override suspend fun trending(): Result<List<Movie>> = trending.also { fetchCount++ }
     override suspend fun recommendationsFor(movieId: Int) =
         recommendations[movieId] ?: Result.success(emptyList())
     override suspend fun discoverByGenre(genreId: Int, page: Int) =
         discover[genreId] ?: Result.success(emptyList())
-    override suspend fun search(query: String, page: Int) = Result.success(PagedMovies(emptyList(), 1, 1))
+    override suspend fun search(query: String, page: Int): Result<PagedMovies> {
+        searchQueries += query
+        return Result.success(searchResults(query, page))
+    }
     override suspend fun details(movieId: Int, region: String): Result<MovieDetails> =
-        Result.failure(IOException("not faked"))
+        details[movieId] ?: Result.failure(IOException("not faked"))
 }
 
 class FakeFeedbackRepository : FeedbackRepository {
