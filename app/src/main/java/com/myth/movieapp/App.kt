@@ -1,20 +1,15 @@
 package com.myth.movieapp
 
 import android.app.Application
-import com.myth.movieapp.presentation.di.*
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.request.crossfade
+import dagger.hilt.android.HiltAndroidApp
 
-class App : Application(),Injector {
-    private lateinit var appComponent: AppComponent
-
-    override fun onCreate() {
-        super.onCreate()
-        appComponent = DaggerAppComponent.builder()
-            .appModule(AppModule(applicationContext))
-            .netModule(NetModule(BuildConfig.BASE_URL))
-            .remoteDataModule(RemoteDataModule(BuildConfig.API_KEY)).build()
-    }
-    override fun createMovieSubComponent(): MovieSubComponent {
-        return appComponent.movieSubComponent().create()
-    }
-
+@HiltAndroidApp
+class App : Application(), SingletonImageLoader.Factory {
+    /** Artwork fades in rather than popping, everywhere Coil loads an image. */
+    override fun newImageLoader(context: PlatformContext): ImageLoader =
+        ImageLoader.Builder(context).crossfade(true).build()
 }

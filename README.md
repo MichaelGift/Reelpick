@@ -1,62 +1,128 @@
-# Movie-Recommendations-App
+# Reelpick: movie recommendations you can see through
 
-## Introduction
+An Android app that learns what you like and builds a personal **For You** feed. Every pick shows a **taste match** and **why it's there** ("Because you liked *Arrival*"), and the app shows you the taste profile it has learned. Built with Jetpack Compose, Hilt, Room and the TMDB API.
 
-Welcome to the Movie Recommendations App, your one-stop solution for finding the best movies to watch. If you're ever undecided on what to watch, this app will keep you up to date with a curated movie watch list. It provides you with movie recommendations, details, and the ability to save your favorite movies.
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/04-for-you.jpg" width="200" alt="For You feed with a full-bleed hero, taste match and the reason it was picked"><br><sub><b>For You</b>: match % and why</sub></td>
+    <td align="center"><img src="docs/screenshots/05-top10-taste.jpg" width="200" alt="Ranked Top 10 row and the learned taste profile card"><br><sub><b>Top 10 + taste profile</b></sub></td>
+    <td align="center"><img src="docs/screenshots/06-details.jpg" width="200" alt="Movie details with taste-match card, watchlist and rating controls"><br><sub><b>Details</b>: why it fits you</sub></td>
+    <td align="center"><img src="docs/screenshots/07-search.jpg" width="200" alt="Browsing the Crime genre as a poster grid"><br><sub><b>Search</b>: browse by genre</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-welcome.jpg" width="200" alt="Welcome screen over a drifting poster mosaic"><br><sub><b>Welcome</b></sub></td>
+    <td align="center"><img src="docs/screenshots/02-genres.jpg" width="200" alt="Onboarding step 1: picking genres"><br><sub><b>Pick genres</b></sub></td>
+    <td align="center"><img src="docs/screenshots/03-seeds.jpg" width="200" alt="Onboarding step 2: picking five seed films"><br><sub><b>Pick seed films</b></sub></td>
+    <td align="center"><img src="docs/screenshots/08-watchlist.jpg" width="200" alt="Watchlist poster grid"><br><sub><b>Watchlist</b> (offline)</sub></td>
+  </tr>
+</table>
 
-### Demo
+<sub>Captured on a Pixel emulator (Android 16) with live TMDB data. Saving four crime and drama films shifted the profile, which is why "Crime" appears in the taste card and the matches read 76%.</sub>
 
-Check out the app in action:
+## Design
 
-https://user-images.githubusercontent.com/120593172/233807849-1e5d59b2-2e24-4183-9a8f-403511faec5a.mp4
+A dark-first, cinematic UI built from scratch as a small design system (`ui/theme`, `ui/common`):
 
+- **Type:** Fraunces (display) paired with Manrope (UI), both variable fonts bundled under the SIL OFL.
+- **Brand:** ember-to-magenta gradient, near-black surfaces, custom adaptive and themed launcher icon, and a branded splash screen.
+- **Motion:** shared-element poster transitions into details, hero parallax, an auto-advancing hero, shimmer skeletons, and haptics on ratings.
+- **Explainability:** taste-match badges, reason pills, and a "What shapes your picks" card that shows the learned genre weights.
 
-## Coming soon
-I am constantly working on improving the app and adding new features. Here's what you can expect in the near future:
+## Features
 
-- **Streaming Integration:** Easily find platforms where the recommended movies are available for streaming.
-- **Push Notifications:** Get timely updates on movie releases, personalized recommendations, and special offers.
-- **TV Show Category:** Explore a diverse collection of TV shows for binge-watching enthusiasts.
-- **Favorites Sync:** Enjoy your favorite movies across multiple devices with synchronized favorites.
+- **Onboarding**: a cinematic welcome over a drifting poster mosaic. Then pick 3 or more genres and at least 5 films you've enjoyed; these seed your taste profile.
+- **For You feed**: a full-bleed hero carousel, a ranked *Top 10 for you*, your taste profile, and rows for *Because you liked X*, *Your genres* and *Trending*. Pull to refresh, and long-press any poster to like, dislike, hide it or save it.
+- **Live re-ranking**: a dislike or "not interested" reorders the feed immediately, offline; a new like brings in fresh candidates.
+- **Movie details**: cast, trailer, runtime, genres, **where to watch** (stream, rent or buy for your region) and "More like this".
+- **Search**: debounced and paginated, with recent searches and *Browse by genre* tiles.
+- **Watchlist**: an offline poster grid. Long-press to mark as watched or remove, with undo.
+- **Settings**: streaming region, light/dark/system theme, and a taste-profile reset.
 
+## How recommendations work
 
-## In Development
+The engine lives in [`domain/recommend`](app/src/main/java/com/myth/movieapp/domain/recommend). It's plain Kotlin with no Android dependencies and is fully unit-tested.
 
-I have some exciting features in development
+1. **Taste profile** ([`TasteProfile`](app/src/main/java/com/myth/movieapp/domain/recommend/TasteProfile.kt)). Each genre gets a weight from explicit signals only:
 
-- **TV Show Category:** Currently on hold due to TMDB updating their API. We're actively working on integrating this feature once the API is ready.
-- **Push Notifications:** Expected to be available by 5th June 2023. Stay tuned for updates!
+   | Signal | Weight per genre |
+   |---|---|
+   | Genre picked in onboarding | +1 |
+   | Liked movie | +2 |
+   | Disliked / not interested | −2 |
+   | On watchlist | +1 |
 
+   Weights are normalised so the strongest genre has a weight of 1. A movie's fit is the cosine similarity between its genres and this profile.
+
+2. **Candidates** ([`CandidateSource`](app/src/main/java/com/myth/movieapp/domain/recommend/CandidateSource.kt)), fetched concurrently:
+   - TMDB recommendations for your 5 most recent likes (the "seeds")
+   - Well-voted movies in your top 3 genres
+   - This week's trending movies, for exploration
+
+   The feed fails only if every source fails.
+
+3. **Ranking** ([`RecommendationRanker`](app/src/main/java/com/myth/movieapp/domain/recommend/RecommendationRanker.kt)):
+
+   ```
+   score = 0.45 · genre affinity
+         + 0.30 · seed support      (how many of your likes recommended it, capped at 3)
+         + 0.20 · Bayesian rating   (a 9.0 from 12 votes doesn't beat an 8.4 from 20k)
+         + 0.05 · freshness         (linear decay over 10 years)
+   ```
+
+   Movies you've rated, saved or watched are filtered out. A diversity pass then stops more than two picks in a row from sharing the same dominant genre. Each pick keeps the reason it was chosen.
+
+4. **Feed** ([`GetForYouFeedUseCase`](app/src/main/java/com/myth/movieapp/domain/recommend/GetForYouFeedUseCase.kt)) splits the ranked list into sections and caches it in Room, so the home screen opens instantly and works offline.
+
+## Architecture
+
+```
+ui/            Compose screens + @HiltViewModel per screen (StateFlow UI state)
+  onboarding/  foryou/  details/  search/  watchlist/  settings/  navigation/  theme/  common/
+domain/        Pure Kotlin: models, repository interfaces, recommendation engine
+data/          Retrofit (TMDB), Room (feedback, watchlist, genres, feed cache), DataStore (prefs)
+di/            Hilt modules
+```
+
+- Single activity with type-safe Navigation Compose routes.
+- Offline-first: the feed, watchlist and ratings live in Room. The network only adds or refreshes data.
+- Repositories return `Result` rather than throwing. The UI maps errors to clear messages (offline, bad token, missing token).
+- The TMDB token is sent as a bearer header by an OkHttp interceptor, so it never appears in URLs or logs.
+
+## Tech stack
+
+Kotlin 2.1 · Jetpack Compose (Material 3) · Navigation Compose · Hilt · KSP · Room · DataStore · Retrofit + OkHttp + kotlinx.serialization · Coil 3 · Coroutines/Flow · JUnit, Turbine, Compose UI tests · GitHub Actions
 
 ## How to run
 
-To run the app on your local machine, follow these simple steps.
-1. Clone the Project to Android Studio:
-```Bash
-git clone https://github.com/MichaelGift/mMvie-Recommendations-App.git
+1. Clone the project and open it in Android Studio:
+   ```bash
+   git clone https://github.com/MichaelGift/Movie-Recommendations-App.git
+   ```
+2. Get a TMDB **API Read Access Token** (v4) from [TMDB → Settings → API](https://www.themoviedb.org/settings/api).
+3. Add it to `local.properties` in the project root. This file is git-ignored, so the token is never committed:
+   ```properties
+   TMDB_ACCESS_TOKEN=your_v4_read_access_token
+   ```
+   On CI, set a `TMDB_ACCESS_TOKEN` repository secret instead. Without a token the app still builds and explains what's missing.
+4. Sync Gradle and run the `app` configuration. You need JDK 17 or newer; Android Studio's bundled JDK works.
+
+## Tests
+
+```bash
+./gradlew testDebugUnitTest
 ```
-2. Get TMDB API Key:
-   - Sign up or log in to TMDB (The Movie Database) and request an API key.
-   - Navigate to the module-level gradle file (usually app/build.gradle) and find the following line:
-```Groovy
-      buildConfigField "String","API_KEY","\(Insert TMDB API key here)"\""
+
+```bash
+./gradlew connectedDebugAndroidTest
 ```
-  - Replace \(Insert TMDB API key here) with your actual TMDB API key.
-3. Resync and Run
-      - Resync the project to ensure the API key is properly set.
-      - Click on the "Run" button in Android Studio to install and launch the app on your device/emulator.
 
+- **Unit tests** (JVM) cover the taste profile, the ranker, candidate sourcing, the feed use case, and the onboarding and search ViewModels.
+- **Instrumented tests** cover the Room repositories, plus Compose UI tests for onboarding and the details screen's watchlist action.
 
-## Tech Stack
+## Attribution
 
-
-The Movie Recommendations App is built using the following technologies and architecture:
-
-- **MVVM (Model-View-ViewModel):** Ensuring a clear separation of concerns and making the codebase maintainable.
-- **Room:** For local data storage and retrieval, enabling seamless user experience.
-- **Retrofit:** For making network requests to fetch movie data from TMDB API.
-- **Dagger:** To provide dependency injection and improve code modularity.
-DataBinding: Making the UI components more reactive and efficient.
+This product uses the TMDB API but is not endorsed or certified by TMDB. Movie data and images © [TMDB](https://www.themoviedb.org/). Streaming availability is provided by JustWatch.
 
 ## Contributing
-I encourage contributions to enhance the Movie Recommendations App. If you have any suggestions, bug fixes, or new features to add, please fork the repository, make your changes, and create a pull request
+
+Suggestions and fixes are welcome. Fork the repository, make your changes, and open a pull request.
