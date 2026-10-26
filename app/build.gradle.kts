@@ -18,6 +18,10 @@ val tmdbToken: String = localProps.getProperty("TMDB_ACCESS_TOKEN")
     ?: System.getenv("TMDB_ACCESS_TOKEN")
     ?: ""
 
+// Release signing comes from the environment (set by .github/workflows/release.yaml). Without it,
+// assembleRelease still works locally but produces an unsigned APK.
+val releaseKeystore: String? = System.getenv("KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+
 android {
     namespace = "com.myth.movieapp"
     compileSdk = 36
@@ -26,16 +30,29 @@ android {
         applicationId = "com.myth.movieapp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "2.0"
+        // CI passes -PversionCode / -PversionName derived from the release tag.
+        versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 2
+        versionName = (findProperty("versionName") as String?) ?: "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "TMDB_ACCESS_TOKEN", "\"$tmdbToken\"")
         buildConfigField("String", "TMDB_BASE_URL", "\"https://api.themoviedb.org/3/\"")
     }
 
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfigs.findByName("release")?.let { signingConfig = it }
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

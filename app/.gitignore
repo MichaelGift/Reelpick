@@ -1,1 +1,3 @@
 /build
+# Android Studio "Generate Signed Bundle/APK" output
+/release
