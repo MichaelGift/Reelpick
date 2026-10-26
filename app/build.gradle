@@ -5,6 +5,11 @@ plugins {
     id 'androidx.navigation.safeargs'
 }
 
+def localProps = new Properties()
+def localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) localPropsFile.withInputStream { localProps.load(it) }
+def tmdbToken = localProps.getProperty("TMDB_ACCESS_TOKEN") ?: System.getenv("TMDB_ACCESS_TOKEN") ?: ""
+
 android {
     namespace 'com.myth.movieapp'
     compileSdk 33
@@ -17,7 +22,7 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField "String", "API_KEY", "\"64efc208946cd917bfbee10ae75a4e5d\""
+        buildConfigField "String", "TMDB_ACCESS_TOKEN", "\"$tmdbToken\""
         buildConfigField "String", "BASE_URL", "\"https://api.themoviedb.org/3/\""
     }
 
