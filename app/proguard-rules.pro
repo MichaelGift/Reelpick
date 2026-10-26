@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# kotlinx.serialization DTOs used by Retrofit
+-keepattributes *Annotation*, InnerClasses, Signature
+-keep,includedescriptorclasses class com.myth.movieapp.data.remote.dto.**$$serializer { *; }
+-keepclassmembers class com.myth.movieapp.data.remote.dto.** { *** Companion; }
+-keepclasseswithmembers class com.myth.movieapp.data.remote.dto.** { kotlinx.serialization.KSerializer serializer(...); }
