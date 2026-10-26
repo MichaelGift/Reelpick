@@ -21,7 +21,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class OnboardingUiState(
-    val step: Step = Step.Genres,
+    val step: Step = Step.Welcome,
+    /** Posters for the welcome screen's backdrop; decorative, so failures just leave it empty. */
+    val mosaic: List<Movie> = emptyList(),
     val genres: List<Genre> = emptyList(),
     val selectedGenreIds: Set<Int> = emptySet(),
     val movies: List<Movie> = emptyList(),
@@ -30,7 +32,7 @@ data class OnboardingUiState(
     val isSaving: Boolean = false,
     val error: String? = null,
 ) {
-    enum class Step { Genres, Movies }
+    enum class Step { Welcome, Genres, Movies }
 
     val canContinue: Boolean get() = selectedGenreIds.size >= MIN_GENRES
     val canFinish: Boolean get() = likedIds.size >= MIN_LIKES && !isSaving
@@ -54,6 +56,11 @@ class OnboardingViewModel @Inject constructor(
 
     init {
         loadGenres()
+        viewModelScope.launch {
+            movies.popular().onSuccess { page ->
+                _state.update { it.copy(mosaic = page.movies.filter { m -> m.posterPath != null }) }
+            }
+        }
     }
 
     fun loadGenres() {
@@ -64,6 +71,8 @@ class OnboardingViewModel @Inject constructor(
                 .onFailure { e -> _state.update { it.copy(isLoading = false, error = e.toUserMessage()) } }
         }
     }
+
+    fun start() = _state.update { it.copy(step = OnboardingUiState.Step.Genres) }
 
     fun toggleGenre(id: Int) = _state.update {
         val selected = if (id in it.selectedGenreIds) it.selectedGenreIds - id else it.selectedGenreIds + id
@@ -93,7 +102,12 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    fun backToGenres() = _state.update { it.copy(step = OnboardingUiState.Step.Genres, error = null) }
+    fun back() = _state.update {
+        when (it.step) {
+            OnboardingUiState.Step.Movies -> it.copy(step = OnboardingUiState.Step.Genres, error = null)
+            else -> it.copy(step = OnboardingUiState.Step.Welcome, error = null)
+        }
+    }
 
     fun toggleLike(id: Int) = _state.update {
         it.copy(likedIds = if (id in it.likedIds) it.likedIds - id else it.likedIds + id)

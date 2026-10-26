@@ -83,6 +83,15 @@ class GetForYouFeedUseCase @Inject constructor(
             }.filter { it.items.isNotEmpty() },
             trending = candidates.trending.filterNot { it.id in excluded }.take(ROW_SIZE),
             generatedAtMillis = clock.millis(),
+            genreNames = genreNames,
+            taste = TasteSummary(
+                topGenres = profile.topGenres(TASTE_GENRES).mapNotNull { id ->
+                    genreNames[id]?.let { GenreWeight(it, profile.weightOf(id)) }
+                },
+                likes = feedback.count { it.type == FeedbackType.LIKE },
+                dislikes = feedback.count { it.type == FeedbackType.DISLIKE || it.type == FeedbackType.NOT_INTERESTED },
+                saved = watchlist.size,
+            ),
         )
         feedCache.save(feed)
         Result.success(feed)
@@ -101,5 +110,6 @@ class GetForYouFeedUseCase @Inject constructor(
         const val SEED_ROWS = 3
         const val GENRE_ROWS = 2
         const val ROW_SIZE = 15
+        const val TASTE_GENRES = 5
     }
 }

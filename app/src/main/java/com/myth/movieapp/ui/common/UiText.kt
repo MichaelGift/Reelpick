@@ -8,6 +8,7 @@ import java.io.IOException
 object TmdbImages {
     private const val BASE = "https://image.tmdb.org/t/p/"
     fun poster(path: String?) = path?.let { "${BASE}w342$it" }
+    fun posterLarge(path: String?) = path?.let { "${BASE}w780$it" }
     fun backdrop(path: String?) = path?.let { "${BASE}w1280$it" }
     fun profile(path: String?) = path?.let { "${BASE}w185$it" }
     fun logo(path: String?) = path?.let { "${BASE}w92$it" }

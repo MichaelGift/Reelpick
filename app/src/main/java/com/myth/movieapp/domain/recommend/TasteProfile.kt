@@ -4,6 +4,7 @@ import com.myth.movieapp.domain.model.Feedback
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Movie
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 /**
@@ -35,6 +36,17 @@ class TasteProfile private constructor(val genreWeights: Map<Int, Double>) {
         if (genres.isEmpty() || norm == 0.0) return 0.0
         val dot = genres.sumOf { weightOf(it) }
         return (dot / (norm * sqrt(genres.size.toDouble()))).coerceIn(-1.0, 1.0)
+    }
+
+    /**
+     * Affinity as a 0–100 "taste match" for display. Null when the profile is empty or the movie
+     * shares nothing the user has shown interest in, so the UI never shows a meaningless 0%.
+     */
+    fun matchPercent(genreIds: List<Int>): Int? {
+        if (isEmpty) return null
+        val affinity = affinity(genreIds)
+        if (affinity <= 0.0) return null
+        return (affinity * 100).roundToInt().coerceIn(1, 99)
     }
 
     /** The movie's genre this user cares about most; used to keep the feed varied. */

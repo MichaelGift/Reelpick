@@ -2,7 +2,9 @@ package com.myth.movieapp.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myth.movieapp.domain.model.Genre
 import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.PagedMovies
 import com.myth.movieapp.domain.repository.MovieRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
 import com.myth.movieapp.ui.common.toUserMessage
@@ -25,6 +27,8 @@ import javax.inject.Inject
 
 data class SearchUiState(
     val query: String = "",
+    /** Set while browsing a genre instead of searching by text. */
+    val browsing: Genre? = null,
     val results: List<Movie> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
@@ -32,7 +36,9 @@ data class SearchUiState(
     val error: String? = null,
     /** True once a search for the current query has completed, so "no results" can be shown. */
     val searched: Boolean = false,
-)
+) {
+    val isIdle: Boolean get() = query.isBlank() && browsing == null
+}
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -48,6 +54,10 @@ class SearchViewModel @Inject constructor(
         .map { it.recentSearches }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    private val _genres = MutableStateFlow<List<Genre>>(emptyList())
+    /** Genres for the "browse" tiles shown before the user types anything. */
+    val genres: StateFlow<List<Genre>> = _genres.asStateFlow()
+
     private val queries = MutableStateFlow("")
     private var page = 1
     private var searchJob: Job? = null
@@ -61,10 +71,11 @@ class SearchViewModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { if (it != lastSearched) search(it) }
             .launchIn(viewModelScope)
+        viewModelScope.launch { movies.genres().onSuccess { _genres.value = it } }
     }
 
     fun onQueryChange(query: String) {
-        _state.update { it.copy(query = query) }
+        _state.update { it.copy(query = query, browsing = null) }
         queries.value = query
         if (query.isBlank()) {
             searchJob?.cancel()
@@ -77,11 +88,26 @@ class SearchViewModel @Inject constructor(
     fun onSubmit(query: String = _state.value.query) {
         val trimmed = query.trim()
         if (trimmed.isEmpty()) return
-        _state.update { it.copy(query = query) }
+        _state.update { it.copy(query = query, browsing = null) }
         queries.value = query
         search(trimmed)
         viewModelScope.launch { preferences.addRecentSearch(trimmed) }
     }
+
+    fun browse(genre: Genre) {
+        searchJob?.cancel()
+        lastSearched = ""
+        queries.value = ""
+        _state.value = SearchUiState(browsing = genre, isLoading = true)
+        searchJob = viewModelScope.launch {
+            load(1).onSuccess { result ->
+                page = 1
+                _state.update { it.copy(results = result.movies, canLoadMore = result.hasMore, isLoading = false, searched = true) }
+            }.onFailure { e -> _state.update { it.copy(isLoading = false, error = e.toUserMessage()) } }
+        }
+    }
+
+    fun clearBrowse() = onQueryChange("")
 
     fun clearRecentSearches() {
         viewModelScope.launch { preferences.clearRecentSearches() }
@@ -92,7 +118,7 @@ class SearchViewModel @Inject constructor(
         if (!current.canLoadMore || current.isLoadingMore || current.isLoading) return
         _state.update { it.copy(isLoadingMore = true) }
         searchJob = viewModelScope.launch {
-            movies.search(current.query.trim(), page + 1)
+            load(page + 1)
                 .onSuccess { result ->
                     page = result.page
                     _state.update {
@@ -104,6 +130,16 @@ class SearchViewModel @Inject constructor(
                     }
                 }
                 .onFailure { e -> _state.update { it.copy(isLoadingMore = false, error = e.toUserMessage()) } }
+        }
+    }
+
+    /** One page of either the text search or the genre being browsed. */
+    private suspend fun load(page: Int): Result<PagedMovies> {
+        val browsing = _state.value.browsing
+        return if (browsing != null) {
+            movies.discoverByGenre(browsing.id, page).map { PagedMovies(it, page, if (it.isEmpty()) page else MAX_BROWSE_PAGES) }
+        } else {
+            movies.search(_state.value.query.trim(), page)
         }
     }
 
@@ -127,5 +163,9 @@ class SearchViewModel @Inject constructor(
                 }
                 .onFailure { e -> _state.update { it.copy(isLoading = false, error = e.toUserMessage()) } }
         }
+    }
+
+    private companion object {
+        const val MAX_BROWSE_PAGES = 10
     }
 }

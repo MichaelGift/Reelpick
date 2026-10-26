@@ -58,6 +58,12 @@ class GetForYouFeedUseCaseTest {
         // The liked seed itself is never recommended back, even when it is trending.
         assertEquals(listOf(4), feed.trending.map { it.id })
         assertEquals(feed, cache.cachedFeed.first())
+
+        // Explainability: matches and the learned profile travel with the feed.
+        assertTrue(feed.topPicks.filter { sciFi in it.movie.genreIds }.all { (it.match ?: 0) > 90 })
+        assertEquals(listOf("Science Fiction"), feed.taste!!.topGenres.map { it.name })
+        assertEquals(1, feed.taste!!.likes)
+        assertEquals("Comedy", feed.genreNames[comedy])
     }
 
     @Test

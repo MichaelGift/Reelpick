@@ -50,6 +50,7 @@ class RecommendationRanker(private val weights: Weights) {
                     movie = candidate.movie,
                     score = score(candidate, profile, today),
                     reason = reasonFor(candidate, profile, seeds, genreNames),
+                    match = profile.matchPercent(candidate.movie.genreIds),
                 )
             }
             .sortedWith(compareByDescending<Recommendation> { it.score }.thenBy { it.movie.id })

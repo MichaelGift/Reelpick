@@ -1,17 +1,26 @@
-# Movie Recommendations App
+# Reelpick: movie recommendations you can see through
 
-An Android app that learns what you like and builds a personal **For You** feed of movies, with an explanation for every pick ("Because you liked *Arrival*"). Built with Jetpack Compose, Hilt, Room and the TMDB API.
+An Android app that learns what you like and builds a personal **For You** feed. Every pick shows a **taste match** and **why it's there** ("Because you liked *Arrival*"), and the app shows you the taste profile it has learned. Built with Jetpack Compose, Hilt, Room and the TMDB API.
 
 <!-- Screenshots / demo GIF: add onboarding, For You, Details and Watchlist captures here. -->
 
+## Design
+
+A dark-first, cinematic UI built from scratch as a small design system (`ui/theme`, `ui/common`):
+
+- **Type:** Fraunces (display) paired with Manrope (UI), both variable fonts bundled under the SIL OFL.
+- **Brand:** ember-to-magenta gradient, near-black surfaces, custom adaptive and themed launcher icon, and a branded splash screen.
+- **Motion:** shared-element poster transitions into details, hero parallax, an auto-advancing hero, shimmer skeletons, and haptics on ratings.
+- **Explainability:** taste-match badges, reason pills, and a "What shapes your picks" card that shows the learned genre weights.
+
 ## Features
 
-- **Onboarding**: pick 3 or more genres and at least 5 movies you've enjoyed. These seed your taste profile.
-- **For You feed**: a hero carousel plus rows for *Top picks*, *Because you liked X*, *Your genres* and *Trending*. Pull to refresh, and long-press any poster to like, dislike, hide it or save it.
+- **Onboarding**: a cinematic welcome over a drifting poster mosaic. Then pick 3 or more genres and at least 5 films you've enjoyed; these seed your taste profile.
+- **For You feed**: a full-bleed hero carousel, a ranked *Top 10 for you*, your taste profile, and rows for *Because you liked X*, *Your genres* and *Trending*. Pull to refresh, and long-press any poster to like, dislike, hide it or save it.
 - **Live re-ranking**: a dislike or "not interested" reorders the feed immediately, offline; a new like brings in fresh candidates.
 - **Movie details**: cast, trailer, runtime, genres, **where to watch** (stream, rent or buy for your region) and "More like this".
-- **Search**: debounced, paginated, with recent searches.
-- **Watchlist**: works offline. Swipe to remove or mark as watched, with undo.
+- **Search**: debounced and paginated, with recent searches and *Browse by genre* tiles.
+- **Watchlist**: an offline poster grid. Long-press to mark as watched or remove, with undo.
 - **Settings**: streaming region, light/dark/system theme, and a taste-profile reset.
 
 ## How recommendations work

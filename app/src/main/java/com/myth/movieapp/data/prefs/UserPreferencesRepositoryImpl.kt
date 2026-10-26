@@ -38,7 +38,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
                 selectedGenreIds = prefs[Keys.selectedGenres].orEmpty().mapNotNull(String::toIntOrNull).toSet(),
                 region = prefs[Keys.region],
                 themeMode = prefs[Keys.theme]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
-                    ?: ThemeMode.SYSTEM,
+                    ?: ThemeMode.DARK,
                 recentSearches = prefs[Keys.recentSearches]?.split(SEPARATOR)?.filter(String::isNotBlank).orEmpty(),
             )
         }

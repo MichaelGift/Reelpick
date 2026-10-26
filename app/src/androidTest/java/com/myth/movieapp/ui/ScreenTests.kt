@@ -3,6 +3,8 @@ package com.myth.movieapp.ui
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -59,6 +61,7 @@ class ScreenTests {
         val viewModel = OnboardingViewModel(movies, feedback, prefs, useCase)
         compose.setContent { MovieAppTheme { OnboardingScreen(viewModel) } }
 
+        compose.onNodeWithText("Get started").performClick()
         compose.onNodeWithText("Pick 3 more").assertIsNotEnabled()
         listOf("Action", "Comedy", "Drama").forEach { compose.onNodeWithText(it).performClick() }
         compose.onNodeWithText("Continue").assertIsEnabled().performClick()
@@ -80,14 +83,17 @@ class ScreenTests {
             MovieDetails(dune, tagline = null, runtimeMinutes = 155, genres = emptyList(), cast = emptyList(),
                 trailerYoutubeKey = null, watchProviders = null),
         )
-        val viewModel = DetailsViewModel(SavedStateHandle(mapOf("movieId" to 42)), movies, feedback, watchlist, prefs)
-        compose.setContent { MovieAppTheme { DetailsScreen(onBack = {}, onMovieClick = {}, viewModel = viewModel) } }
+        val viewModel = DetailsViewModel(
+            SavedStateHandle(mapOf("movieId" to 42, "title" to "Dune")), movies, feedback, watchlist, prefs,
+        )
+        compose.setContent { MovieAppTheme { DetailsScreen(onBack = {}, onMovieClick = { _, _ -> }, viewModel = viewModel) } }
 
-        compose.onNodeWithText("Dune").assertExists()
-        compose.onNodeWithText("2h 35m", substring = true).assertExists()
-        compose.onNodeWithContentDescription("Watchlist").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("2h 35m", substring = true).fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodesWithText("Dune").onFirst().assertExists()
+        compose.onNodeWithText("Add to watchlist").performClick()
 
         compose.waitUntil(5_000) { runBlocking { watchlist.isInWatchlist(42).first() } }
+        compose.onNodeWithText("On your watchlist").assertExists()
         assertTrue(runBlocking { watchlist.watchlist.first() }.any { it.id == 42 })
     }
 }
