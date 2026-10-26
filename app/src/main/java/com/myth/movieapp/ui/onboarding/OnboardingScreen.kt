@@ -187,7 +187,9 @@ private fun PosterMosaic(movies: List<Movie>, modifier: Modifier = Modifier) {
                     .graphicsLayer { translationY = direction * drift * 900f - (if (index == 1) 400f else 0f) },
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                (column + column).forEach { movie -> PosterImage(movie.posterPath, contentDescription = null) }
+                (column + column).forEach { movie ->
+                    PosterImage(movie.posterPath, contentDescription = null, showPlaceholderIcon = false)
+                }
             }
         }
     }

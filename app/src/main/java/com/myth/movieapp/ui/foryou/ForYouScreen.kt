@@ -152,7 +152,7 @@ private fun TopBar(listState: LazyListState) {
         derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 600 }
     }
     val background by animateColorAsState(
-        if (solid) MaterialTheme.colorScheme.background.copy(alpha = 0.96f) else Color.Transparent,
+        if (solid) MaterialTheme.colorScheme.background else Color.Transparent,
         label = "topBar",
     )
     Box(Modifier.fillMaxWidth().background(background).statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp)) {
