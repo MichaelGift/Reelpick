@@ -1,0 +1,117 @@
+name: Release
+
+# Publishes a signed APK as a GitHub Release whenever a version tag is pushed:
+#   git tag v1.2.0 && git push origin v1.2.0
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # create the GitHub Release
+
+    env:
+      TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history, to check the tag is on master and to generate notes
+
+      - name: Check the tagged commit is on master
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
+            echo "::error::$GITHUB_REF_NAME points to a commit that is not on master."
+            exit 1
+          fi
+
+      - name: Check signing secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          missing=0
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then echo "::error::Repository secret $name is not set."; missing=1; fi
+          done
+          if [ -z "$TMDB_ACCESS_TOKEN" ]; then
+            echo "::warning::Repository secret TMDB_ACCESS_TOKEN is not set; the APK will show a 'missing token' message instead of movies."
+          fi
+          exit $missing
+
+      - name: Compute version
+        run: |
+          # v1.2.0 -> 1.2.0 (also accepts v.1.2.0)
+          VERSION_NAME="${GITHUB_REF_NAME#v}"
+          VERSION_NAME="${VERSION_NAME#.}"
+          SHORT_SHA="$(git rev-parse --short HEAD)"
+          # versionCode must only ever increase; this workflow's run number does. The offset keeps
+          # it above the versionCode (2) that local builds use, so releases install over them.
+          VERSION_CODE=$(( ${{ github.run_number }} + 100 ))
+          {
+            echo "VERSION_NAME=$VERSION_NAME"
+            echo "VERSION_CODE=$VERSION_CODE"
+            echo "SHORT_SHA=$SHORT_SHA"
+          } >> "$GITHUB_ENV"
+          echo "Releasing $GITHUB_REF_NAME as versionName=$VERSION_NAME, versionCode=$VERSION_CODE ($SHORT_SHA)"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Decode keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          echo "KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+
+      - name: Build signed release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease -PversionName="$VERSION_NAME" -PversionCode="$VERSION_CODE"
+
+      - name: Verify signature
+        run: |
+          APK=app/build/outputs/apk/release/app-release.apk
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
+          # Fails the step if the APK is unsigned or the signature is invalid.
+          "$APKSIGNER" verify "$APK"
+          # Log which key signed it (output format varies across build-tools versions).
+          "$APKSIGNER" verify --print-certs "$APK" | grep -E "certificate (DN|SHA-256)" || true
+          cp "$APK" "reelpick-$GITHUB_REF_NAME.apk"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          flags=()
+          case "$GITHUB_REF_NAME" in *-*) flags+=(--prerelease) ;; esac
+          gh release create "$GITHUB_REF_NAME" "reelpick-$GITHUB_REF_NAME.apk" \
+            --verify-tag \
+            --title "Reelpick $GITHUB_REF_NAME" \
+            --notes "Built from \`$SHORT_SHA\` · versionCode $VERSION_CODE" \
+            --generate-notes \
+            "${flags[@]}"
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
