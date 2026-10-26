@@ -1,7 +1,7 @@
 package com.myth.movieapp.ui.details
 
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -158,7 +158,7 @@ private fun DetailsBody(
             details.trailerYoutubeKey?.let { key ->
                 Button(
                     onClick = {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$key")))
+                        context.startActivity(Intent(Intent.ACTION_VIEW, "https://www.youtube.com/watch?v=$key".toUri()))
                     },
                     modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
                 ) {
@@ -177,7 +177,7 @@ private fun DetailsBody(
             }
 
             WhereToWatch(details.watchProviders, content.region) { link ->
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(link)))
+                context.startActivity(Intent(Intent.ACTION_VIEW, link.toUri()))
             }
 
             if (details.cast.isNotEmpty()) CastRow(details.cast)

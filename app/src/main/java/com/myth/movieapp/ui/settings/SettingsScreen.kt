@@ -1,7 +1,7 @@
 package com.myth.movieapp.ui.settings
 
 import android.content.Intent
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -90,7 +90,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
             TextButton(
-                onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.themoviedb.org/"))) },
+                onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, "https://www.themoviedb.org/".toUri())) },
                 modifier = Modifier.padding(horizontal = 4.dp),
             ) { Text("themoviedb.org") }
         }
