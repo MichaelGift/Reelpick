@@ -30,21 +30,17 @@ I have some exciting features in development
 
 ## How to run
 
-To run the app on your local machine, follow these simple steps.
-1. Clone the Project to Android Studio:
-```Bash
-git clone https://github.com/MichaelGift/mMvie-Recommendations-App.git
+1. Clone the project and open it in Android Studio:
+```bash
+git clone https://github.com/MichaelGift/Movie-Recommendations-App.git
 ```
-2. Get TMDB API Key:
-   - Sign up or log in to TMDB (The Movie Database) and request an API key.
-   - Navigate to the module-level gradle file (usually app/build.gradle) and find the following line:
-```Groovy
-      buildConfigField "String","API_KEY","\(Insert TMDB API key here)"\""
+2. Get a TMDB **API Read Access Token** (v4) from [TMDB → Settings → API](https://www.themoviedb.org/settings/api).
+3. Add it to `local.properties` in the project root (this file is git-ignored, so the token never gets committed):
+```properties
+TMDB_ACCESS_TOKEN=your_v4_read_access_token
 ```
-  - Replace \(Insert TMDB API key here) with your actual TMDB API key.
-3. Resync and Run
-      - Resync the project to ensure the API key is properly set.
-      - Click on the "Run" button in Android Studio to install and launch the app on your device/emulator.
+   On CI, set a `TMDB_ACCESS_TOKEN` environment variable / repository secret instead.
+4. Sync Gradle and run the `app` configuration.
 
 
 ## Tech Stack
