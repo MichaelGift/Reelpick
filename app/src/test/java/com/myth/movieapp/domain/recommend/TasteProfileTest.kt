@@ -81,6 +81,16 @@ class TasteProfileTest {
     }
 
     @Test
+    fun `match percent hides empty profiles and unrelated films`() {
+        val profile = TasteProfile.build(setOf(action, comedy), emptyList(), emptyList())
+
+        assertEquals(null, TasteProfile.EMPTY.matchPercent(listOf(action)))
+        assertEquals(null, profile.matchPercent(listOf(horror)))
+        assertEquals(99, profile.matchPercent(listOf(action, comedy)))
+        assertEquals(71, profile.matchPercent(listOf(action)))
+    }
+
+    @Test
     fun `dominant genre is the one the user weights most`() {
         val profile = TasteProfile.build(
             selectedGenreIds = setOf(action),

@@ -60,7 +60,7 @@ data class UserPreferences(
     val selectedGenreIds: Set<Int> = emptySet(),
     /** ISO 3166-1 country code used for watch providers; null means "use the device locale". */
     val region: String? = null,
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val themeMode: ThemeMode = ThemeMode.DARK,
     val recentSearches: List<String> = emptyList(),
 )
 

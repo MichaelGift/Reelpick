@@ -22,7 +22,25 @@ sealed interface RecommendationReason {
 }
 
 @Serializable
-data class Recommendation(val movie: Movie, val score: Double, val reason: RecommendationReason)
+data class Recommendation(
+    val movie: Movie,
+    val score: Double,
+    val reason: RecommendationReason,
+    /** Taste match 0–100, or null when there's no meaningful overlap with the user's profile. */
+    val match: Int? = null,
+)
+
+@Serializable
+data class GenreWeight(val name: String, val weight: Double)
+
+/** What the app has learned, shown back to the user so the feed never feels like a black box. */
+@Serializable
+data class TasteSummary(
+    val topGenres: List<GenreWeight>,
+    val likes: Int,
+    val dislikes: Int,
+    val saved: Int,
+)
 
 @Serializable
 data class SeedRow(val seed: Movie, val items: List<Recommendation>)
@@ -37,6 +55,8 @@ data class ForYouFeed(
     val genreRows: List<GenreRow>,
     val trending: List<Movie>,
     val generatedAtMillis: Long,
+    val genreNames: Map<Int, String> = emptyMap(),
+    val taste: TasteSummary? = null,
 ) {
     val isEmpty: Boolean get() = topPicks.isEmpty() && trending.isEmpty()
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brand mark: a rounded play symbol with a spark ("a pick, explained"). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineJoin="round"
+        android:pathData="M42,39 L42,69 L66,54 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M73,27 Q74.2,34.8 82,36 Q74.2,37.2 73,45 Q71.8,37.2 64,36 Q71.8,34.8 73,27 Z" />
+</vector>

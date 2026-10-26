@@ -59,6 +59,24 @@ class SearchViewModelTest {
     }
 
     @Test
+    fun `browsing a genre pages through discover results and clears on exit`() = runTest(main.dispatcher) {
+        val drama = com.myth.movieapp.domain.model.Genre(18, "Drama")
+        movies.discover[18] = Result.success(listOf(movie(7, listOf(18))))
+        val viewModel = SearchViewModel(movies, prefs)
+
+        viewModel.browse(drama)
+        advanceUntilIdle()
+
+        assertEquals(drama, viewModel.state.value.browsing)
+        assertEquals(listOf(7), viewModel.state.value.results.map { it.id })
+        assertTrue(viewModel.state.value.canLoadMore)
+
+        viewModel.clearBrowse()
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.isIdle)
+    }
+
+    @Test
     fun `submitting remembers the query and clearing the field resets results`() = runTest(main.dispatcher) {
         val viewModel = SearchViewModel(movies, prefs)
 
