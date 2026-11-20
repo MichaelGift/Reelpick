@@ -1,8 +1,8 @@
 package com.myth.movieapp.ui.search
 
 import app.cash.turbine.test
-import com.myth.movieapp.domain.model.PagedMovies
-import com.myth.movieapp.testing.FakeMovieRepository
+import com.myth.movieapp.domain.model.PagedTitles
+import com.myth.movieapp.testing.FakeTitleRepository
 import com.myth.movieapp.testing.FakeUserPreferencesRepository
 import com.myth.movieapp.testing.MainDispatcherRule
 import com.myth.movieapp.testing.movie
@@ -22,8 +22,8 @@ class SearchViewModelTest {
 
     @get:Rule val main = MainDispatcherRule()
 
-    private val movies = FakeMovieRepository().apply {
-        searchResults = { query, page -> PagedMovies(listOf(movie(page, title = "$query $page")), page, 2) }
+    private val movies = FakeTitleRepository().apply {
+        searchResults = { query, page -> PagedTitles(listOf(movie(page, title = "$query $page")), page, 2) }
     }
     private val prefs = FakeUserPreferencesRepository()
 

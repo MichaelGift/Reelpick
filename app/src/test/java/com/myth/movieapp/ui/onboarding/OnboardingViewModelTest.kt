@@ -7,7 +7,7 @@ import com.myth.movieapp.domain.recommend.GetForYouFeedUseCase
 import com.myth.movieapp.domain.recommend.RecommendationRanker
 import com.myth.movieapp.testing.FakeFeedCacheRepository
 import com.myth.movieapp.testing.FakeFeedbackRepository
-import com.myth.movieapp.testing.FakeMovieRepository
+import com.myth.movieapp.testing.FakeTitleRepository
 import com.myth.movieapp.testing.FakeUserPreferencesRepository
 import com.myth.movieapp.testing.FakeWatchlistRepository
 import com.myth.movieapp.testing.MainDispatcherRule
@@ -29,7 +29,7 @@ class OnboardingViewModelTest {
     @get:Rule val main = MainDispatcherRule()
 
     private val genres = listOf(Genre(1, "Action"), Genre(2, "Comedy"), Genre(3, "Drama"), Genre(4, "Horror"))
-    private val movies = FakeMovieRepository().apply {
+    private val movies = FakeTitleRepository().apply {
         this.genres = this@OnboardingViewModelTest.genres
         genres.forEach { g ->
             discover[g.id] = Result.success((1..4).map { i -> movie(g.id * 10 + i, listOf(g.id)).copy(posterPath = "/p.jpg") })

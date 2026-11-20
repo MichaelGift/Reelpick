@@ -45,7 +45,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.myth.movieapp.ui.common.LocalNavAnimatedScope
 import com.myth.movieapp.ui.common.LocalSharedTransitionScope
-import com.myth.movieapp.ui.common.OpenMovie
+import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.details.DetailsScreen
 import com.myth.movieapp.ui.foryou.ForYouScreen
 import com.myth.movieapp.ui.search.SearchScreen
@@ -134,7 +134,7 @@ fun MovieApp() {
             }
         },
     ) { padding ->
-        val openDetails: OpenMovie = { movie, key ->
+        val openDetails: OpenTitle = { movie, key ->
             navController.navigate(DetailsRoute(movie.id, key, movie.title, movie.posterPath, movie.backdropPath))
         }
         SharedTransitionLayout {

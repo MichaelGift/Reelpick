@@ -5,7 +5,7 @@ import com.myth.movieapp.domain.model.Genre
 import com.myth.movieapp.domain.model.UserPreferences
 import com.myth.movieapp.testing.FakeFeedCacheRepository
 import com.myth.movieapp.testing.FakeFeedbackRepository
-import com.myth.movieapp.testing.FakeMovieRepository
+import com.myth.movieapp.testing.FakeTitleRepository
 import com.myth.movieapp.testing.FakeUserPreferencesRepository
 import com.myth.movieapp.testing.FakeWatchlistRepository
 import com.myth.movieapp.testing.movie
@@ -25,7 +25,7 @@ class GetForYouFeedUseCaseTest {
     private val sciFi = 878
     private val comedy = 35
 
-    private val movies = FakeMovieRepository().apply {
+    private val movies = FakeTitleRepository().apply {
         genres = listOf(Genre(sciFi, "Science Fiction"), Genre(comedy, "Comedy"))
     }
     private val feedback = FakeFeedbackRepository()

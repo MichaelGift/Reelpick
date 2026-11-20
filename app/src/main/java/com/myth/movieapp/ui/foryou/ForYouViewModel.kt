@@ -3,7 +3,7 @@ package com.myth.movieapp.ui.foryou
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myth.movieapp.domain.model.FeedbackType
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.recommend.GetForYouFeedUseCase
 import com.myth.movieapp.domain.repository.FeedbackRepository
@@ -72,16 +72,16 @@ class ForYouViewModel @Inject constructor(
 
     fun retry() = load(forceRefresh = true, userInitiated = false)
 
-    fun onFeedback(movie: Movie, type: FeedbackType) {
+    fun onFeedback(movie: Title, type: FeedbackType) {
         viewModelScope.launch { feedback.setFeedback(movie, type) }
     }
 
-    fun addToWatchlist(movie: Movie) {
+    fun addToWatchlist(movie: Title) {
         viewModelScope.launch { watchlist.add(movie) }
         _state.update { it.copy(notice = "Saved “${movie.title}” to your watchlist") }
     }
 
-    fun toggleWatchlist(movie: Movie) {
+    fun toggleWatchlist(movie: Title) {
         if (movie.id in _state.value.watchlistIds) {
             viewModelScope.launch { watchlist.remove(movie.id) }
         } else {

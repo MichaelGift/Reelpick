@@ -4,7 +4,7 @@ import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Genre
 import com.myth.movieapp.domain.repository.FeedCacheRepository
 import com.myth.movieapp.domain.repository.FeedbackRepository
-import com.myth.movieapp.domain.repository.MovieRepository
+import com.myth.movieapp.domain.repository.TitleRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
 import com.myth.movieapp.domain.repository.WatchlistRepository
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +25,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class GetForYouFeedUseCase @Inject constructor(
-    private val movies: MovieRepository,
+    private val movies: TitleRepository,
     private val feedbackRepository: FeedbackRepository,
     private val watchlistRepository: WatchlistRepository,
     private val preferences: UserPreferencesRepository,

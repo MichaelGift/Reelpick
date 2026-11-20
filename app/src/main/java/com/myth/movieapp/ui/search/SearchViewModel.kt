@@ -3,9 +3,9 @@ package com.myth.movieapp.ui.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myth.movieapp.domain.model.Genre
-import com.myth.movieapp.domain.model.Movie
-import com.myth.movieapp.domain.model.PagedMovies
-import com.myth.movieapp.domain.repository.MovieRepository
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.PagedTitles
+import com.myth.movieapp.domain.repository.TitleRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
 import com.myth.movieapp.ui.common.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,7 +29,7 @@ data class SearchUiState(
     val query: String = "",
     /** Set while browsing a genre instead of searching by text. */
     val browsing: Genre? = null,
-    val results: List<Movie> = emptyList(),
+    val results: List<Title> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val canLoadMore: Boolean = false,
@@ -43,7 +43,7 @@ data class SearchUiState(
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val movies: MovieRepository,
+    private val movies: TitleRepository,
     private val preferences: UserPreferencesRepository,
 ) : ViewModel() {
 
@@ -123,7 +123,7 @@ class SearchViewModel @Inject constructor(
                     page = result.page
                     _state.update {
                         it.copy(
-                            results = (it.results + result.movies).distinctBy(Movie::id),
+                            results = (it.results + result.movies).distinctBy(Title::id),
                             canLoadMore = result.hasMore,
                             isLoadingMore = false,
                         )
@@ -134,10 +134,10 @@ class SearchViewModel @Inject constructor(
     }
 
     /** One page of either the text search or the genre being browsed. */
-    private suspend fun load(page: Int): Result<PagedMovies> {
+    private suspend fun load(page: Int): Result<PagedTitles> {
         val browsing = _state.value.browsing
         return if (browsing != null) {
-            movies.discoverByGenre(browsing.id, page).map { PagedMovies(it, page, if (it.isEmpty()) page else MAX_BROWSE_PAGES) }
+            movies.discoverByGenre(browsing.id, page).map { PagedTitles(it, page, if (it.isEmpty()) page else MAX_BROWSE_PAGES) }
         } else {
             movies.search(_state.value.query.trim(), page)
         }

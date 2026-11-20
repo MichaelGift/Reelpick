@@ -8,7 +8,7 @@ import com.myth.movieapp.data.local.WatchlistDao
 import com.myth.movieapp.data.local.WatchlistEntity
 import com.myth.movieapp.domain.model.Feedback
 import com.myth.movieapp.domain.model.FeedbackType
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.repository.FeedCacheRepository
 import com.myth.movieapp.domain.repository.FeedbackRepository
@@ -32,7 +32,7 @@ class FeedbackRepositoryImpl @Inject constructor(
     override fun feedbackFor(movieId: Int): Flow<FeedbackType?> =
         dao.observeType(movieId).distinctUntilChanged()
 
-    override suspend fun setFeedback(movie: Movie, type: FeedbackType) =
+    override suspend fun setFeedback(movie: Title, type: FeedbackType) =
         dao.upsert(FeedbackEntity(movie.id, type, clock.millis(), movie))
 
     override suspend fun clearFeedback(movieId: Int) = dao.delete(movieId)
@@ -45,12 +45,12 @@ class WatchlistRepositoryImpl @Inject constructor(
     private val dao: WatchlistDao,
     private val clock: Clock,
 ) : WatchlistRepository {
-    override val watchlist: Flow<List<Movie>> = dao.observeAll().map { rows -> rows.map { it.movie } }
+    override val watchlist: Flow<List<Title>> = dao.observeAll().map { rows -> rows.map { it.movie } }
 
     override fun isInWatchlist(movieId: Int): Flow<Boolean> =
         dao.observeContains(movieId).distinctUntilChanged()
 
-    override suspend fun add(movie: Movie) = dao.upsert(WatchlistEntity(movie.id, clock.millis(), movie))
+    override suspend fun add(movie: Title) = dao.upsert(WatchlistEntity(movie.id, clock.millis(), movie))
 
     override suspend fun remove(movieId: Int) = dao.delete(movieId)
 }

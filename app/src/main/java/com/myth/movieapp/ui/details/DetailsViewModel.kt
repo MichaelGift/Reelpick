@@ -5,11 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.myth.movieapp.domain.model.FeedbackType
-import com.myth.movieapp.domain.model.Movie
-import com.myth.movieapp.domain.model.MovieDetails
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleDetails
 import com.myth.movieapp.domain.recommend.TasteProfile
 import com.myth.movieapp.domain.repository.FeedbackRepository
-import com.myth.movieapp.domain.repository.MovieRepository
+import com.myth.movieapp.domain.repository.TitleRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
 import com.myth.movieapp.domain.repository.WatchlistRepository
 import com.myth.movieapp.ui.common.toUserMessage
@@ -35,8 +35,8 @@ sealed interface DetailsContent {
     data object Loading : DetailsContent
     data class Error(val message: String) : DetailsContent
     data class Loaded(
-        val details: MovieDetails,
-        val moreLikeThis: List<Movie>,
+        val details: TitleDetails,
+        val moreLikeThis: List<Title>,
         val region: String,
         val fit: TasteFit?,
     ) : DetailsContent
@@ -51,7 +51,7 @@ data class DetailsUiState(
 @HiltViewModel
 class DetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val movies: MovieRepository,
+    private val movies: TitleRepository,
     private val feedback: FeedbackRepository,
     private val watchlist: WatchlistRepository,
     private val preferences: UserPreferencesRepository,
@@ -96,7 +96,7 @@ class DetailsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun tasteFit(details: MovieDetails, selectedGenres: Set<Int>): TasteFit? {
+    private suspend fun tasteFit(details: TitleDetails, selectedGenres: Set<Int>): TasteFit? {
         // Exclude this movie's own rating so liking it doesn't inflate its own match.
         val signals = feedback.feedback.first().filterNot { it.movie.id == movieId }
         val saved = watchlist.watchlist.first().filterNot { it.id == movieId }
@@ -112,18 +112,18 @@ class DetailsViewModel @Inject constructor(
 
     /** Tapping the active rating again clears it. */
     fun toggleFeedback(type: FeedbackType) {
-        val movie = loadedMovie() ?: return
+        val movie = loadedTitle() ?: return
         viewModelScope.launch {
             if (state.value.feedback == type) feedback.clearFeedback(movie.id) else feedback.setFeedback(movie, type)
         }
     }
 
     fun toggleWatchlist() {
-        val movie = loadedMovie() ?: return
+        val movie = loadedTitle() ?: return
         viewModelScope.launch {
             if (state.value.inWatchlist) watchlist.remove(movie.id) else watchlist.add(movie)
         }
     }
 
-    private fun loadedMovie(): Movie? = (content.value as? DetailsContent.Loaded)?.details?.movie
+    private fun loadedTitle(): Title? = (content.value as? DetailsContent.Loaded)?.details?.movie
 }

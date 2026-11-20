@@ -61,13 +61,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myth.movieapp.domain.model.Genre
 import com.myth.movieapp.ui.common.ErrorState
 import com.myth.movieapp.ui.common.MessageState
-import com.myth.movieapp.ui.common.OpenMovie
+import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.common.PosterCard
 import com.myth.movieapp.ui.common.posterKey
 import com.myth.movieapp.ui.theme.EyebrowStyle
 
 @Composable
-fun SearchScreen(onMovieClick: OpenMovie, viewModel: SearchViewModel = hiltViewModel()) {
+fun SearchScreen(onMovieClick: OpenTitle, viewModel: SearchViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val recent by viewModel.recentSearches.collectAsStateWithLifecycle()
     val genres by viewModel.genres.collectAsStateWithLifecycle()
@@ -194,7 +194,7 @@ private fun GenreTile(genre: Genre, onClick: () -> Unit) {
 }
 
 @Composable
-private fun Results(state: SearchUiState, onMovieClick: OpenMovie, onLoadMore: () -> Unit, onClearBrowse: () -> Unit) {
+private fun Results(state: SearchUiState, onMovieClick: OpenTitle, onLoadMore: () -> Unit, onClearBrowse: () -> Unit) {
     val gridState: LazyGridState = rememberLazyGridState()
     val nearEnd by remember {
         derivedStateOf {

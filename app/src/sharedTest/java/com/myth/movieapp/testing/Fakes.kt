@@ -3,15 +3,15 @@ package com.myth.movieapp.testing
 import com.myth.movieapp.domain.model.Feedback
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Genre
-import com.myth.movieapp.domain.model.Movie
-import com.myth.movieapp.domain.model.MovieDetails
-import com.myth.movieapp.domain.model.PagedMovies
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleDetails
+import com.myth.movieapp.domain.model.PagedTitles
 import com.myth.movieapp.domain.model.ThemeMode
 import com.myth.movieapp.domain.model.UserPreferences
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.repository.FeedCacheRepository
 import com.myth.movieapp.domain.repository.FeedbackRepository
-import com.myth.movieapp.domain.repository.MovieRepository
+import com.myth.movieapp.domain.repository.TitleRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
 import com.myth.movieapp.domain.repository.WatchlistRepository
 import kotlinx.coroutines.flow.Flow
@@ -27,7 +27,7 @@ fun movie(
     voteCount: Int = 1_000,
     releaseDate: String? = "2020-01-01",
     title: String = "Movie $id",
-) = Movie(
+) = Title(
     id = id,
     title = title,
     genreIds = genres,
@@ -36,32 +36,32 @@ fun movie(
     releaseDate = releaseDate,
 )
 
-class FakeMovieRepository : MovieRepository {
+class FakeTitleRepository : TitleRepository {
     var genres: List<Genre> = emptyList()
-    var trending: Result<List<Movie>> = Result.success(emptyList())
-    val recommendations = mutableMapOf<Int, Result<List<Movie>>>()
-    val discover = mutableMapOf<Int, Result<List<Movie>>>()
-    val details = mutableMapOf<Int, Result<MovieDetails>>()
-    var searchResults: (String, Int) -> PagedMovies = { _, page -> PagedMovies(emptyList(), page, page) }
+    var trending: Result<List<Title>> = Result.success(emptyList())
+    val recommendations = mutableMapOf<Int, Result<List<Title>>>()
+    val discover = mutableMapOf<Int, Result<List<Title>>>()
+    val details = mutableMapOf<Int, Result<TitleDetails>>()
+    var searchResults: (String, Int) -> PagedTitles = { _, page -> PagedTitles(emptyList(), page, page) }
     val searchQueries = mutableListOf<String>()
     var fetchCount = 0
         private set
 
-    var popular: List<Movie> = emptyList()
+    var popular: List<Title> = emptyList()
 
     override suspend fun genres() = Result.success(genres)
-    override suspend fun popular(page: Int) = Result.success(PagedMovies(popular, 1, 1))
-    override suspend fun topRated(page: Int) = Result.success(PagedMovies(emptyList(), 1, 1))
-    override suspend fun trending(): Result<List<Movie>> = trending.also { fetchCount++ }
+    override suspend fun popular(page: Int) = Result.success(PagedTitles(popular, 1, 1))
+    override suspend fun topRated(page: Int) = Result.success(PagedTitles(emptyList(), 1, 1))
+    override suspend fun trending(): Result<List<Title>> = trending.also { fetchCount++ }
     override suspend fun recommendationsFor(movieId: Int) =
         recommendations[movieId] ?: Result.success(emptyList())
     override suspend fun discoverByGenre(genreId: Int, page: Int) =
         discover[genreId] ?: Result.success(emptyList())
-    override suspend fun search(query: String, page: Int): Result<PagedMovies> {
+    override suspend fun search(query: String, page: Int): Result<PagedTitles> {
         searchQueries += query
         return Result.success(searchResults(query, page))
     }
-    override suspend fun details(movieId: Int, region: String): Result<MovieDetails> =
+    override suspend fun details(movieId: Int, region: String): Result<TitleDetails> =
         details[movieId] ?: Result.failure(IOException("not faked"))
 }
 
@@ -74,7 +74,7 @@ class FakeFeedbackRepository : FeedbackRepository {
 
     override fun feedbackFor(movieId: Int) = state.map { it[movieId]?.type }
 
-    override suspend fun setFeedback(movie: Movie, type: FeedbackType) =
+    override suspend fun setFeedback(movie: Title, type: FeedbackType) =
         state.update { it + (movie.id to Feedback(movie, type, ++tick)) }
 
     override suspend fun clearFeedback(movieId: Int) = state.update { it - movieId }
@@ -82,10 +82,10 @@ class FakeFeedbackRepository : FeedbackRepository {
 }
 
 class FakeWatchlistRepository : WatchlistRepository {
-    private val state = MutableStateFlow<List<Movie>>(emptyList())
-    override val watchlist: Flow<List<Movie>> = state
+    private val state = MutableStateFlow<List<Title>>(emptyList())
+    override val watchlist: Flow<List<Title>> = state
     override fun isInWatchlist(movieId: Int) = state.map { list -> list.any { it.id == movieId } }
-    override suspend fun add(movie: Movie) = state.update { listOf(movie) + it.filterNot { m -> m.id == movie.id } }
+    override suspend fun add(movie: Title) = state.update { listOf(movie) + it.filterNot { m -> m.id == movie.id } }
     override suspend fun remove(movieId: Int) = state.update { it.filterNot { m -> m.id == movieId } }
 }
 

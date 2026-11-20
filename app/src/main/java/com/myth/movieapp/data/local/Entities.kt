@@ -3,7 +3,7 @@ package com.myth.movieapp.data.local
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.myth.movieapp.domain.model.FeedbackType
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.recommend.ForYouFeed
 
 // Movies are stored as JSON columns (see Converters): nothing queries their fields, and it keeps
@@ -15,14 +15,14 @@ data class FeedbackEntity(
     @PrimaryKey val movieId: Int,
     val type: FeedbackType,
     val timestampMillis: Long,
-    val movie: Movie,
+    val movie: Title,
 )
 
 @Entity(tableName = "watchlist")
 data class WatchlistEntity(
     @PrimaryKey val movieId: Int,
     val addedAtMillis: Long,
-    val movie: Movie,
+    val movie: Title,
 )
 
 @Entity(tableName = "genres")

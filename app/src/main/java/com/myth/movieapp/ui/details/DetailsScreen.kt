@@ -78,16 +78,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.myth.movieapp.domain.model.CastMember
 import com.myth.movieapp.domain.model.FeedbackType
-import com.myth.movieapp.domain.model.Movie
-import com.myth.movieapp.domain.model.MovieDetails
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleDetails
 import com.myth.movieapp.domain.model.WatchProvider
 import com.myth.movieapp.domain.model.WatchProviders
 import com.myth.movieapp.ui.common.Card
 import com.myth.movieapp.ui.common.ErrorState
 import com.myth.movieapp.ui.common.GlassIconButton
 import com.myth.movieapp.ui.common.GradientButton
-import com.myth.movieapp.ui.common.MovieRow
-import com.myth.movieapp.ui.common.OpenMovie
+import com.myth.movieapp.ui.common.TitleRow
+import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.common.PosterImage
 import com.myth.movieapp.ui.common.RatingPill
 import com.myth.movieapp.ui.common.RowItem
@@ -101,7 +101,7 @@ import com.myth.movieapp.ui.theme.EyebrowStyle
 @Composable
 fun DetailsScreen(
     onBack: () -> Unit,
-    onMovieClick: OpenMovie,
+    onMovieClick: OpenTitle,
     viewModel: DetailsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -144,13 +144,13 @@ fun DetailsScreen(
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.weight(1f))
-                GlassIconButton(Icons.Rounded.Share, "Share", onClick = { context.shareMovie(movie) })
+                GlassIconButton(Icons.Rounded.Share, "Share", onClick = { context.shareTitle(movie) })
             }
         }
     }
 }
 
-private fun android.content.Context.shareMovie(movie: Movie) {
+private fun android.content.Context.shareTitle(movie: Title) {
     val text = listOfNotNull(movie.title, movie.releaseYear?.let { "($it)" }).joinToString(" ") +
         " https://www.themoviedb.org/movie/${movie.id}"
     val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
@@ -231,7 +231,7 @@ private fun DetailsBody(
     scrollState: ScrollState,
     onFeedback: (FeedbackType) -> Unit,
     onToggleWatchlist: () -> Unit,
-    onMovieClick: OpenMovie,
+    onMovieClick: OpenTitle,
 ) {
     val details = content.details
     val movie = details.movie
@@ -287,7 +287,7 @@ private fun DetailsBody(
             if (details.cast.isNotEmpty()) CastRow(details.cast)
 
             if (content.moreLikeThis.isNotEmpty()) {
-                MovieRow(
+                TitleRow(
                     title = "More like this",
                     eyebrow = "If you like ${movie.title}",
                     items = content.moreLikeThis.map { RowItem(it) },
@@ -301,7 +301,7 @@ private fun DetailsBody(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun GenreTags(details: MovieDetails) {
+private fun GenreTags(details: TitleDetails) {
     if (details.genres.isEmpty()) return
     FlowRow(
         Modifier.padding(horizontal = 20.dp),
@@ -407,7 +407,7 @@ private fun androidx.compose.foundation.layout.RowScope.Segment(
 }
 
 @Composable
-private fun Synopsis(details: MovieDetails, modifier: Modifier = Modifier) {
+private fun Synopsis(details: TitleDetails, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
     Column(modifier.animateContentSize()) {
         details.tagline?.let {

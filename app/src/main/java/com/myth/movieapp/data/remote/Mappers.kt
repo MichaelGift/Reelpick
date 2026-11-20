@@ -7,13 +7,13 @@ import com.myth.movieapp.data.remote.dto.PagedResponse
 import com.myth.movieapp.data.remote.dto.ProviderDto
 import com.myth.movieapp.domain.model.CastMember
 import com.myth.movieapp.domain.model.Genre
-import com.myth.movieapp.domain.model.Movie
-import com.myth.movieapp.domain.model.MovieDetails
-import com.myth.movieapp.domain.model.PagedMovies
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleDetails
+import com.myth.movieapp.domain.model.PagedTitles
 import com.myth.movieapp.domain.model.WatchProvider
 import com.myth.movieapp.domain.model.WatchProviders
 
-fun MovieDto.toDomain() = Movie(
+fun MovieDto.toDomain() = Title(
     id = id,
     title = title,
     overview = overview,
@@ -28,7 +28,7 @@ fun MovieDto.toDomain() = Movie(
 
 fun GenreDto.toDomain() = Genre(id, name)
 
-fun PagedResponse<MovieDto>.toPagedMovies() = PagedMovies(
+fun PagedResponse<MovieDto>.toPagedMovies() = PagedTitles(
     movies = results.map { it.toDomain() },
     page = page,
     totalPages = totalPages,
@@ -36,8 +36,8 @@ fun PagedResponse<MovieDto>.toPagedMovies() = PagedMovies(
 
 private fun ProviderDto.toDomain() = WatchProvider(id, name, logoPath)
 
-fun MovieDetailsDto.toDomain(region: String): MovieDetails {
-    val movie = Movie(
+fun MovieDetailsDto.toDomain(region: String): TitleDetails {
+    val movie = Title(
         id = id,
         title = title,
         overview = overview,
@@ -61,7 +61,7 @@ fun MovieDetailsDto.toDomain(region: String): MovieDetails {
         )
     }?.takeUnless { it.isEmpty }
 
-    return MovieDetails(
+    return TitleDetails(
         movie = movie,
         tagline = tagline?.takeIf { it.isNotBlank() },
         runtimeMinutes = runtime?.takeIf { it > 0 },

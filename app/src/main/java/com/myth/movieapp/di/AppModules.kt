@@ -16,11 +16,11 @@ import com.myth.movieapp.data.remote.AuthInterceptor
 import com.myth.movieapp.data.remote.TmdbApi
 import com.myth.movieapp.data.repository.FeedCacheRepositoryImpl
 import com.myth.movieapp.data.repository.FeedbackRepositoryImpl
-import com.myth.movieapp.data.repository.MovieRepositoryImpl
+import com.myth.movieapp.data.repository.TitleRepositoryImpl
 import com.myth.movieapp.data.repository.WatchlistRepositoryImpl
 import com.myth.movieapp.domain.repository.FeedCacheRepository
 import com.myth.movieapp.domain.repository.FeedbackRepository
-import com.myth.movieapp.domain.repository.MovieRepository
+import com.myth.movieapp.domain.repository.TitleRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
 import com.myth.movieapp.domain.repository.WatchlistRepository
 import dagger.Binds
@@ -103,7 +103,7 @@ object DomainModule {
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
-    @Binds abstract fun bindMovieRepository(impl: MovieRepositoryImpl): MovieRepository
+    @Binds abstract fun bindMovieRepository(impl: TitleRepositoryImpl): TitleRepository
     @Binds abstract fun bindFeedbackRepository(impl: FeedbackRepositoryImpl): FeedbackRepository
     @Binds abstract fun bindWatchlistRepository(impl: WatchlistRepositoryImpl): WatchlistRepository
     @Binds abstract fun bindFeedCacheRepository(impl: FeedCacheRepositoryImpl): FeedCacheRepository

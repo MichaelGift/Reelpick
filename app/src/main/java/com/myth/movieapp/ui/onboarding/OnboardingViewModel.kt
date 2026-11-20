@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Genre
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.recommend.GetForYouFeedUseCase
 import com.myth.movieapp.domain.repository.FeedbackRepository
-import com.myth.movieapp.domain.repository.MovieRepository
+import com.myth.movieapp.domain.repository.TitleRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
 import com.myth.movieapp.ui.common.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,10 +23,10 @@ import javax.inject.Inject
 data class OnboardingUiState(
     val step: Step = Step.Welcome,
     /** Posters for the welcome screen's backdrop; decorative, so failures just leave it empty. */
-    val mosaic: List<Movie> = emptyList(),
+    val mosaic: List<Title> = emptyList(),
     val genres: List<Genre> = emptyList(),
     val selectedGenreIds: Set<Int> = emptySet(),
-    val movies: List<Movie> = emptyList(),
+    val movies: List<Title> = emptyList(),
     val likedIds: Set<Int> = emptySet(),
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
@@ -45,7 +45,7 @@ data class OnboardingUiState(
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
-    private val movies: MovieRepository,
+    private val movies: TitleRepository,
     private val feedback: FeedbackRepository,
     private val preferences: UserPreferencesRepository,
     private val forYouFeed: GetForYouFeedUseCase,

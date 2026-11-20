@@ -59,7 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.recommend.Recommendation
 import com.myth.movieapp.domain.recommend.TasteSummary
@@ -70,9 +70,9 @@ import com.myth.movieapp.ui.common.LoadingFeed
 import com.myth.movieapp.ui.common.MIN_DISPLAY_MATCH
 import com.myth.movieapp.ui.common.MatchBadge
 import com.myth.movieapp.ui.common.MessageState
-import com.myth.movieapp.ui.common.MovieActionsSheet
-import com.myth.movieapp.ui.common.MovieRow
-import com.myth.movieapp.ui.common.OpenMovie
+import com.myth.movieapp.ui.common.TitleActionsSheet
+import com.myth.movieapp.ui.common.TitleRow
+import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.common.RankedRow
 import com.myth.movieapp.ui.common.ReasonPill
 import com.myth.movieapp.ui.common.RowItem
@@ -88,12 +88,12 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForYouScreen(
-    onMovieClick: OpenMovie,
+    onMovieClick: OpenTitle,
     viewModel: ForYouViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    var actionsFor by remember { mutableStateOf<Movie?>(null) }
+    var actionsFor by remember { mutableStateOf<Title?>(null) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(state.error, state.notice, state.feed) {
@@ -136,7 +136,7 @@ fun ForYouScreen(
     }
 
     actionsFor?.let { movie ->
-        MovieActionsSheet(
+        TitleActionsSheet(
             movie = movie,
             onDismiss = { actionsFor = null },
             onFeedback = { viewModel.onFeedback(movie, it) },
@@ -165,9 +165,9 @@ private fun FeedContent(
     feed: ForYouFeed,
     listState: LazyListState,
     watchlistIds: Set<Int>,
-    onMovieClick: OpenMovie,
-    onMovieLongClick: (Movie) -> Unit,
-    onToggleWatchlist: (Movie) -> Unit,
+    onMovieClick: OpenTitle,
+    onMovieLongClick: (Title) -> Unit,
+    onToggleWatchlist: (Title) -> Unit,
 ) {
     val hero = feed.topPicks.take(HERO_COUNT)
     BoxWithConstraints {
@@ -207,7 +207,7 @@ private fun FeedContent(
             val matchById = feed.topPicks.associate { it.movie.id to it.match }
             feed.becauseYouLiked.forEach { row ->
                 item(key = "seed-${row.seed.id}") {
-                    MovieRow(
+                    TitleRow(
                         title = row.seed.title,
                         eyebrow = "Because you liked",
                         items = row.items.map { RowItem(it.movie, match = it.match) },
@@ -219,7 +219,7 @@ private fun FeedContent(
             }
             feed.genreRows.forEach { row ->
                 item(key = "genre-${row.genre.id}") {
-                    MovieRow(
+                    TitleRow(
                         title = row.genre.name,
                         eyebrow = "One of your genres",
                         items = row.items.map { RowItem(it.movie, match = it.match) },
@@ -231,7 +231,7 @@ private fun FeedContent(
             }
             if (feed.trending.isNotEmpty()) {
                 item(key = "trending") {
-                    MovieRow(
+                    TitleRow(
                         title = "Trending this week",
                         eyebrow = "Everyone's watching",
                         items = feed.trending.map { RowItem(it, match = matchById[it.id]) },
@@ -253,9 +253,9 @@ private fun HeroPager(
     height: Dp,
     listState: LazyListState,
     watchlistIds: Set<Int>,
-    onOpen: (Movie) -> Unit,
-    onLongPress: (Movie) -> Unit,
-    onToggleWatchlist: (Movie) -> Unit,
+    onOpen: (Title) -> Unit,
+    onLongPress: (Title) -> Unit,
+    onToggleWatchlist: (Title) -> Unit,
 ) {
     val pagerState = rememberPagerState { picks.size }
     val dragged by pagerState.interactionSource.collectIsDraggedAsState()

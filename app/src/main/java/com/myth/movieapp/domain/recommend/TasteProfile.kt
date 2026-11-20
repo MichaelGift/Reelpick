@@ -2,7 +2,7 @@ package com.myth.movieapp.domain.recommend
 
 import com.myth.movieapp.domain.model.Feedback
 import com.myth.movieapp.domain.model.FeedbackType
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -64,7 +64,7 @@ class TasteProfile private constructor(val genreWeights: Map<Int, Double>) {
         fun build(
             selectedGenreIds: Set<Int>,
             feedback: List<Feedback>,
-            watchlist: List<Movie>,
+            watchlist: List<Title>,
         ): TasteProfile {
             val raw = mutableMapOf<Int, Double>()
             fun add(genreIds: Collection<Int>, delta: Double) =

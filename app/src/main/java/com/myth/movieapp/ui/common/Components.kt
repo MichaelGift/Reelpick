@@ -59,14 +59,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.ui.theme.Brand
 import com.myth.movieapp.ui.theme.EyebrowStyle
 import com.myth.movieapp.ui.theme.Fraunces
 import java.util.Locale
 
 /** One poster in a row, with optional caption and taste match. */
-data class RowItem(val movie: Movie, val caption: String? = null, val match: Int? = null)
+data class RowItem(val movie: Title, val caption: String? = null, val match: Int? = null)
 
 val PosterShape = RoundedCornerShape(14.dp)
 
@@ -107,7 +107,7 @@ fun PosterImage(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PosterCard(
-    movie: Movie,
+    movie: Title,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     width: Dp = 132.dp,
@@ -148,7 +148,7 @@ fun PosterCard(
     }
 }
 
-fun Movie.ratingLabel(): String? = if (voteCount > 0) "★ " + String.format(Locale.US, "%.1f", voteAverage) else null
+fun Title.ratingLabel(): String? = if (voteCount > 0) "★ " + String.format(Locale.US, "%.1f", voteAverage) else null
 
 /** Taste-match chip: a small green dot plus "92%". Shown on artwork, so colours are fixed. */
 @Composable
@@ -231,15 +231,15 @@ fun SectionHeader(
 }
 
 @Composable
-fun MovieRow(
+fun TitleRow(
     title: String,
     items: List<RowItem>,
     section: String,
-    onMovieClick: OpenMovie,
+    onMovieClick: OpenTitle,
     modifier: Modifier = Modifier,
     eyebrow: String? = null,
     subtitle: String? = null,
-    onMovieLongClick: ((Movie) -> Unit)? = null,
+    onMovieLongClick: ((Title) -> Unit)? = null,
 ) {
     Column(modifier) {
         SectionHeader(title, eyebrow = eyebrow, subtitle = subtitle)
@@ -270,11 +270,11 @@ fun RankedRow(
     title: String,
     items: List<RowItem>,
     section: String,
-    onMovieClick: OpenMovie,
+    onMovieClick: OpenTitle,
     modifier: Modifier = Modifier,
     eyebrow: String? = null,
     subtitle: String? = null,
-    onMovieLongClick: ((Movie) -> Unit)? = null,
+    onMovieLongClick: ((Title) -> Unit)? = null,
 ) {
     val numeral = TextStyle(
         fontFamily = Fraunces,

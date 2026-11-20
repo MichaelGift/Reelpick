@@ -6,20 +6,20 @@ import com.myth.movieapp.data.remote.TmdbApi
 import com.myth.movieapp.data.remote.toDomain
 import com.myth.movieapp.data.remote.toPagedMovies
 import com.myth.movieapp.domain.model.Genre
-import com.myth.movieapp.domain.model.Movie
-import com.myth.movieapp.domain.model.MovieDetails
-import com.myth.movieapp.domain.model.PagedMovies
-import com.myth.movieapp.domain.repository.MovieRepository
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleDetails
+import com.myth.movieapp.domain.model.PagedTitles
+import com.myth.movieapp.domain.repository.TitleRepository
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MovieRepositoryImpl @Inject constructor(
+class TitleRepositoryImpl @Inject constructor(
     private val api: TmdbApi,
     private val genreDao: GenreDao,
-) : MovieRepository {
+) : TitleRepository {
 
     private val genreLock = Mutex()
     @Volatile private var genreCache: List<Genre>? = null
@@ -38,24 +38,24 @@ class MovieRepositoryImpl @Inject constructor(
         if (cached.isNotEmpty()) Result.success(cached.also { genreCache = it }) else remote
     }
 
-    override suspend fun popular(page: Int): Result<PagedMovies> =
+    override suspend fun popular(page: Int): Result<PagedTitles> =
         safeCall { api.popular(page).toPagedMovies() }
 
-    override suspend fun topRated(page: Int): Result<PagedMovies> =
+    override suspend fun topRated(page: Int): Result<PagedTitles> =
         safeCall { api.topRated(page).toPagedMovies() }
 
-    override suspend fun trending(): Result<List<Movie>> =
+    override suspend fun trending(): Result<List<Title>> =
         safeCall { api.trending().results.map { it.toDomain() } }
 
-    override suspend fun recommendationsFor(movieId: Int): Result<List<Movie>> =
+    override suspend fun recommendationsFor(movieId: Int): Result<List<Title>> =
         safeCall { api.recommendations(movieId).results.map { it.toDomain() } }
 
-    override suspend fun discoverByGenre(genreId: Int, page: Int): Result<List<Movie>> =
+    override suspend fun discoverByGenre(genreId: Int, page: Int): Result<List<Title>> =
         safeCall { api.discover(genreIds = genreId.toString(), page = page).results.map { it.toDomain() } }
 
-    override suspend fun search(query: String, page: Int): Result<PagedMovies> =
+    override suspend fun search(query: String, page: Int): Result<PagedTitles> =
         safeCall { api.search(query, page).toPagedMovies() }
 
-    override suspend fun details(movieId: Int, region: String): Result<MovieDetails> =
+    override suspend fun details(movieId: Int, region: String): Result<TitleDetails> =
         safeCall { api.details(movieId).toDomain(region) }
 }

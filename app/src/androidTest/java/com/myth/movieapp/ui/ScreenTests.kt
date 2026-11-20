@@ -11,13 +11,13 @@ import androidx.compose.ui.test.performClick
 import androidx.lifecycle.SavedStateHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.myth.movieapp.domain.model.Genre
-import com.myth.movieapp.domain.model.MovieDetails
+import com.myth.movieapp.domain.model.TitleDetails
 import com.myth.movieapp.domain.recommend.CandidateSource
 import com.myth.movieapp.domain.recommend.GetForYouFeedUseCase
 import com.myth.movieapp.domain.recommend.RecommendationRanker
 import com.myth.movieapp.testing.FakeFeedCacheRepository
 import com.myth.movieapp.testing.FakeFeedbackRepository
-import com.myth.movieapp.testing.FakeMovieRepository
+import com.myth.movieapp.testing.FakeTitleRepository
 import com.myth.movieapp.testing.FakeUserPreferencesRepository
 import com.myth.movieapp.testing.FakeWatchlistRepository
 import com.myth.movieapp.testing.movie
@@ -40,7 +40,7 @@ class ScreenTests {
 
     @get:Rule val compose = createComposeRule()
 
-    private val movies = FakeMovieRepository()
+    private val movies = FakeTitleRepository()
     private val feedback = FakeFeedbackRepository()
     private val watchlist = FakeWatchlistRepository()
     private val prefs = FakeUserPreferencesRepository()
@@ -80,7 +80,7 @@ class ScreenTests {
     fun detailsWatchlistToggleUpdatesRepository() {
         val dune = movie(42, title = "Dune")
         movies.details[42] = Result.success(
-            MovieDetails(dune, tagline = null, runtimeMinutes = 155, genres = emptyList(), cast = emptyList(),
+            TitleDetails(dune, tagline = null, runtimeMinutes = 155, genres = emptyList(), cast = emptyList(),
                 trailerYoutubeKey = null, watchProviders = null),
         )
         val viewModel = DetailsViewModel(

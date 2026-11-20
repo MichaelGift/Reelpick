@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.room)
 }
 
 // The TMDB v4 read access token lives in the git-ignored local.properties (or a CI secret).
@@ -69,6 +70,11 @@ android {
         getByName("test").kotlin.directories.add("src/sharedTest/java")
         getByName("androidTest").kotlin.directories.add("src/sharedTest/java")
     }
+}
+
+room {
+    // Exported schemas are committed so every migration can be tested against the real history.
+    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {

@@ -25,13 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import com.myth.movieapp.domain.model.FeedbackType
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 
 /** Long-press menu for quick feedback without opening the details screen. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieActionsSheet(
-    movie: Movie,
+fun TitleActionsSheet(
+    movie: Title,
     onDismiss: () -> Unit,
     onFeedback: (FeedbackType) -> Unit,
     onAddToWatchlist: () -> Unit,

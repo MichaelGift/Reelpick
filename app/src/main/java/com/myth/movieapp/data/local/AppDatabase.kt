@@ -7,7 +7,7 @@ import androidx.room.TypeConverters
 @Database(
     entities = [FeedbackEntity::class, WatchlistEntity::class, GenreEntity::class, FeedCacheEntity::class],
     version = 1,
-    exportSchema = false,
+    exportSchema = true,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

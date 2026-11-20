@@ -41,9 +41,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.ui.common.MessageState
-import com.myth.movieapp.ui.common.OpenMovie
+import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.common.PosterCard
 import com.myth.movieapp.ui.common.posterKey
 import com.myth.movieapp.ui.theme.EyebrowStyle
@@ -51,13 +51,13 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WatchlistScreen(onMovieClick: OpenMovie, viewModel: WatchlistViewModel = hiltViewModel()) {
+fun WatchlistScreen(onMovieClick: OpenTitle, viewModel: WatchlistViewModel = hiltViewModel()) {
     val movies by viewModel.movies.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var actionsFor by remember { mutableStateOf<Movie?>(null) }
+    var actionsFor by remember { mutableStateOf<Title?>(null) }
 
-    fun withUndo(movie: Movie, message: String, action: (Movie) -> Unit, undo: (Movie) -> Unit) {
+    fun withUndo(movie: Title, message: String, action: (Title) -> Unit, undo: (Title) -> Unit) {
         action(movie)
         scope.launch {
             if (snackbar.showSnackbar(message, actionLabel = "Undo") == SnackbarResult.ActionPerformed) undo(movie)

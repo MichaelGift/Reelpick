@@ -1,6 +1,6 @@
 package com.myth.movieapp.domain.recommend
 
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
@@ -35,7 +35,7 @@ class RecommendationRanker(private val weights: Weights) {
     fun rank(
         candidates: List<Candidate>,
         profile: TasteProfile,
-        seeds: List<Movie>,
+        seeds: List<Title>,
         excludedIds: Set<Int>,
         genreNames: Map<Int, String>,
         today: LocalDate,
@@ -69,13 +69,13 @@ class RecommendationRanker(private val weights: Weights) {
     }
 
     /** Pulls averages from few votes toward [Weights.priorMean], so 9.0 from 12 votes doesn't win. */
-    internal fun bayesianRating(movie: Movie): Double {
+    internal fun bayesianRating(movie: Title): Double {
         val v = movie.voteCount.coerceAtLeast(0).toDouble()
         val m = weights.priorVotes.toDouble()
         return (v / (v + m)) * movie.voteAverage + (m / (v + m)) * weights.priorMean
     }
 
-    internal fun freshness(movie: Movie, today: LocalDate): Double {
+    internal fun freshness(movie: Title, today: LocalDate): Double {
         val released = movie.releaseLocalDate() ?: return 0.0
         if (!released.isBefore(today)) return 1.0
         val years = ChronoUnit.DAYS.between(released, today) / 365.25
@@ -85,7 +85,7 @@ class RecommendationRanker(private val weights: Weights) {
     private fun reasonFor(
         candidate: Candidate,
         profile: TasteProfile,
-        seeds: List<Movie>,
+        seeds: List<Title>,
         genreNames: Map<Int, String>,
     ): RecommendationReason {
         // Seeds are ordered most recent like first, so the reason cites the freshest memory.

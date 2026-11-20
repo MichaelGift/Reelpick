@@ -6,10 +6,10 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 
 /** Open a movie's details; [sharedKey] lets the tapped poster morph into the details poster. */
-typealias OpenMovie = (movie: Movie, sharedKey: String?) -> Unit
+typealias OpenTitle = (movie: Title, sharedKey: String?) -> Unit
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }

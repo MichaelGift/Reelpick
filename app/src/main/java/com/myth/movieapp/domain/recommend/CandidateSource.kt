@@ -1,7 +1,7 @@
 package com.myth.movieapp.domain.recommend
 
-import com.myth.movieapp.domain.model.Movie
-import com.myth.movieapp.domain.repository.MovieRepository
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.repository.TitleRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -14,20 +14,20 @@ sealed interface CandidateOrigin {
     data object Trending : CandidateOrigin
 }
 
-data class Candidate(val movie: Movie, val origins: Set<CandidateOrigin>) {
+data class Candidate(val movie: Title, val origins: Set<CandidateOrigin>) {
     val seedIds: Set<Int> get() = origins.filterIsInstance<CandidateOrigin.Seed>().mapTo(mutableSetOf()) { it.seedId }
 }
 
-data class CandidatePool(val candidates: List<Candidate>, val trending: List<Movie>)
+data class CandidatePool(val candidates: List<Candidate>, val trending: List<Title>)
 
 /**
  * Gathers movies worth ranking: TMDB recommendations for each liked "seed", well-voted
  * movies in the user's top genres, and this week's trending titles for exploration.
  * Sources are fetched concurrently; the pool fails only if every source fails.
  */
-class CandidateSource @Inject constructor(private val movies: MovieRepository) {
+class CandidateSource @Inject constructor(private val movies: TitleRepository) {
 
-    suspend fun fetch(seeds: List<Movie>, genreIds: List<Int>): Result<CandidatePool> = coroutineScope {
+    suspend fun fetch(seeds: List<Title>, genreIds: List<Int>): Result<CandidatePool> = coroutineScope {
         val seedCalls = seeds.map { seed ->
             async { CandidateOrigin.Seed(seed.id) to movies.recommendationsFor(seed.id) }
         }

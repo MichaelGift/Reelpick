@@ -61,7 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myth.movieapp.domain.model.Genre
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.ui.common.ErrorState
 import com.myth.movieapp.ui.common.GradientButton
 import com.myth.movieapp.ui.common.PosterImage
@@ -114,7 +114,7 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
                 when {
                     state.error != null -> ErrorState(state.error!!, viewModel::continueToMovies)
                     state.isLoading -> Loading()
-                    else -> MoviePicker(state.movies, state.likedIds, viewModel::toggleLike)
+                    else -> TitlePicker(state.movies, state.likedIds, viewModel::toggleLike)
                 }
             }
         }
@@ -125,7 +125,7 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
 private fun Loading() = Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
 
 @Composable
-private fun Welcome(mosaic: List<Movie>, onStart: () -> Unit) {
+private fun Welcome(mosaic: List<Title>, onStart: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         PosterMosaic(mosaic, Modifier.fillMaxSize())
         Box(
@@ -162,7 +162,7 @@ private fun Welcome(mosaic: List<Movie>, onStart: () -> Unit) {
 
 /** Three tilted columns of posters drifting in opposite directions behind the welcome copy. */
 @Composable
-private fun PosterMosaic(movies: List<Movie>, modifier: Modifier = Modifier) {
+private fun PosterMosaic(movies: List<Title>, modifier: Modifier = Modifier) {
     if (movies.size < 6) return
     val drift by rememberInfiniteTransition(label = "mosaic").animateFloat(
         initialValue = 0f,
@@ -320,7 +320,7 @@ private fun GenreGrid(genres: List<Genre>, selected: Set<Int>, onToggle: (Int) -
 }
 
 @Composable
-private fun MoviePicker(movies: List<Movie>, likedIds: Set<Int>, onToggle: (Int) -> Unit) {
+private fun TitlePicker(movies: List<Title>, likedIds: Set<Int>, onToggle: (Int) -> Unit) {
     val haptics = LocalHapticFeedback.current
     LazyVerticalGrid(
         columns = GridCells.Adaptive(104.dp),
