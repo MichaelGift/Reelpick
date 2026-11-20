@@ -1,0 +1,37 @@
+{
+ "count": 5,
+ "next": null,
+ "previous": null,
+ "results": [
+  {
+   "id": 10646,
+   "game_id": 9767,
+   "store_id": 1,
+   "url": "http://store.steampowered.com/app/367520/"
+  },
+  {
+   "id": 26919,
+   "game_id": 9767,
+   "store_id": 5,
+   "url": "http://www.gog.com/game/hollow_knight"
+  },
+  {
+   "id": 48908,
+   "game_id": 9767,
+   "store_id": 6,
+   "url": "https://www.nintendo.com/games/detail/hollow-knight-switch"
+  },
+  {
+   "id": 296863,
+   "game_id": 9767,
+   "store_id": 2,
+   "url": "https://www.microsoft.com/en-us/p/hollow-knight-voidheart-edition/9mw9469v91lm"
+  },
+  {
+   "id": 296864,
+   "game_id": 9767,
+   "store_id": 3,
+   "url": "https://store.playstation.com/en-us/product/UP1822-CUSA13632_00-HOLLOWKNIGHT18US"
+  }
+ ]
+}

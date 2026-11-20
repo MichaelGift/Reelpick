@@ -1,37 +1,32 @@
 package com.myth.movieapp.domain.recommend
 
+import com.myth.core.recommend.ItemTraits
+import com.myth.core.recommend.Ranker
+import com.myth.core.recommend.RankerWeights
 import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.model.TitleKey
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
+import com.myth.core.recommend.Candidate as RankCandidate
+
+/** How the shared engine reads a film or series. */
+object TitleTraits : ItemTraits<Title, TitleKey, Int> {
+    override fun key(item: Title) = item.key
+    override fun features(item: Title) = item.genreIds
+    override fun rating(item: Title) = item.voteAverage
+    override fun votes(item: Title) = item.voteCount
+    override fun released(item: Title) = item.releaseLocalDate()
+}
 
 /**
- * Scores and orders candidates for one user. Pure Kotlin with no I/O, so every rule is unit-tested.
- *
- * score = genre * genreAffinity + seed * seedSupport + quality * bayesianRating + freshness * recency
- *
- * Each term is in [0, 1]. Movies the user has already rated, saved or watched are removed, and a
- * final pass stops more than [Weights.maxGenreRun] consecutive picks sharing a dominant genre.
+ * Reelpick's use of the shared [Ranker]: ranks films and series, drops the seeds themselves and
+ * anything already rated, saved or watched, and explains each pick.
  */
-class RecommendationRanker(private val weights: Weights) {
+class RecommendationRanker(weights: RankerWeights) {
 
-    @Inject constructor() : this(Weights())
+    @Inject constructor() : this(RankerWeights())
 
-    data class Weights(
-        val genre: Double = 0.45,
-        val seed: Double = 0.30,
-        val quality: Double = 0.20,
-        val freshness: Double = 0.05,
-        /** Seed support saturates here: being recommended by 3 liked movies is "fully supported". */
-        val seedSaturation: Int = 3,
-        /** Bayesian prior: a movie needs about this many votes before its own average dominates. */
-        val priorVotes: Int = 300,
-        val priorMean: Double = 6.5,
-        /** Releases older than this many years get no freshness boost. */
-        val freshnessYears: Double = 10.0,
-        val maxGenreRun: Int = 2,
-    )
+    private val engine = Ranker(TitleTraits, weights, compareBy<Title> { it.id }.thenBy { it.mediaType })
 
     fun rank(
         candidates: List<Candidate>,
@@ -42,79 +37,38 @@ class RecommendationRanker(private val weights: Weights) {
         today: LocalDate,
     ): List<Recommendation> {
         val seedKeys = seeds.mapTo(mutableSetOf()) { it.key }
-        val scored = candidates
-            .asSequence()
-            .filter { it.movie.key !in excludedKeys && it.movie.key !in seedKeys }
-            .distinctBy { it.movie.key }
-            .map { candidate ->
+        return engine
+            .rank(candidates.map { RankCandidate(it.movie, it.seedKeys) }, profile, excludedKeys + seedKeys, today)
+            .map { ranked ->
                 Recommendation(
-                    movie = candidate.movie,
-                    score = score(candidate, profile, today),
-                    reason = reasonFor(candidate, profile, seeds, genreNames),
-                    match = profile.matchPercent(candidate.movie.genreIds),
+                    movie = ranked.item,
+                    score = ranked.score,
+                    reason = reasonFor(ranked.item, ranked.candidate.seedKeys, profile, seeds, genreNames),
+                    match = ranked.match,
                 )
             }
-            .sortedWith(compareByDescending<Recommendation> { it.score }.thenBy { it.movie.id }.thenBy { it.movie.mediaType })
-            .toList()
-        return diversify(scored, profile)
     }
 
-    internal fun score(candidate: Candidate, profile: TasteProfile, today: LocalDate): Double {
-        val movie = candidate.movie
-        val genre = if (profile.isEmpty) 0.5 else (profile.affinity(movie.genreIds) + 1.0) / 2.0
-        val seed = candidate.seedKeys.size.coerceAtMost(weights.seedSaturation).toDouble() / weights.seedSaturation
-        return weights.genre * genre +
-            weights.seed * seed +
-            weights.quality * bayesianRating(movie) / 10.0 +
-            weights.freshness * freshness(movie, today)
-    }
+    internal fun bayesianRating(movie: Title): Double = engine.bayesianRating(movie)
 
-    /** Pulls averages from few votes toward [Weights.priorMean], so 9.0 from 12 votes doesn't win. */
-    internal fun bayesianRating(movie: Title): Double {
-        val v = movie.voteCount.coerceAtLeast(0).toDouble()
-        val m = weights.priorVotes.toDouble()
-        return (v / (v + m)) * movie.voteAverage + (m / (v + m)) * weights.priorMean
-    }
-
-    internal fun freshness(movie: Title, today: LocalDate): Double {
-        val released = movie.releaseLocalDate() ?: return 0.0
-        if (!released.isBefore(today)) return 1.0
-        val years = ChronoUnit.DAYS.between(released, today) / 365.25
-        return (1.0 - years / weights.freshnessYears).coerceIn(0.0, 1.0)
-    }
+    internal fun freshness(movie: Title, today: LocalDate): Double = engine.freshness(movie, today)
 
     private fun reasonFor(
-        candidate: Candidate,
+        movie: Title,
+        reachedFrom: Set<TitleKey>,
         profile: TasteProfile,
         seeds: List<Title>,
         genreNames: Map<Int, String>,
     ): RecommendationReason {
         // Seeds are ordered most recent like first, so the reason cites the freshest memory.
-        seeds.firstOrNull { it.key in candidate.seedKeys }?.let {
+        seeds.firstOrNull { it.key in reachedFrom }?.let {
             return RecommendationReason.BecauseYouLiked(it.id, it.title)
         }
-        val matched = candidate.movie.genreIds
+        val matched = movie.genreIds
             .filter { profile.weightOf(it) > 0.0 }
             .sortedByDescending { profile.weightOf(it) }
             .mapNotNull { genreNames[it] }
             .take(2)
         return if (matched.isNotEmpty()) RecommendationReason.MatchesGenres(matched) else RecommendationReason.Trending
-    }
-
-    /**
-     * Greedy re-ordering: take the best remaining item whose dominant genre wouldn't extend a run
-     * longer than [Weights.maxGenreRun]; if every remaining item would, take the best one anyway.
-     */
-    internal fun diversify(ranked: List<Recommendation>, profile: TasteProfile): List<Recommendation> {
-        if (weights.maxGenreRun <= 0 || ranked.size < 3) return ranked
-        val remaining = ranked.toMutableList()
-        val result = ArrayList<Recommendation>(ranked.size)
-        while (remaining.isNotEmpty()) {
-            val recent = result.takeLast(weights.maxGenreRun).map { profile.dominantGenre(it.movie.genreIds) }
-            val runGenre = recent.firstOrNull()?.takeIf { g -> recent.size == weights.maxGenreRun && recent.all { it == g } }
-            val index = remaining.indexOfFirst { runGenre == null || profile.dominantGenre(it.movie.genreIds) != runGenre }
-            result += remaining.removeAt(if (index >= 0) index else 0)
-        }
-        return result
     }
 }

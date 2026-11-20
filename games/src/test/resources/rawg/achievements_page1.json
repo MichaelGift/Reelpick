@@ -1,0 +1,77 @@
+{
+ "count": 39,
+ "next": "https://api.rawg.io/api/games/9767/achievements?key=REDACTED&page=2",
+ "previous": null,
+ "results": [
+  {
+   "id": 1072652,
+   "name": "Heart of Hallownest",
+   "description": "Acquire all other trophies",
+   "image": "https://media.rawg.io/media/achievements/025/025833591043ad6024e78d8c0a29376f.jpg",
+   "percent": "1.46"
+  },
+  {
+   "id": 104043,
+   "name": "Steel Heart",
+   "description": "Achieve 100% game completion and finish the game in Steel Soul mode",
+   "image": "https://media.rawg.io/media/achievements/164/16461420940f257f5109d7f5d8524ba9_hLFYuGQ.jpg",
+   "percent": "3.34"
+  },
+  {
+   "id": 108213,
+   "name": "Steel Soul",
+   "description": "Finish the game in Steel Soul mode",
+   "image": "https://media.rawg.io/media/achievements/c5a/c5a7b4d18c124bd5b667978159f606f3.jpg",
+   "percent": "3.58"
+  },
+  {
+   "id": 104044,
+   "name": "Speedrun 2",
+   "description": "Complete the game in under 5 hours",
+   "image": "https://media.rawg.io/media/achievements/1c7/1c7ea1b55038210c162299994fe7a781.jpg",
+   "percent": "4.00"
+  },
+  {
+   "id": 108214,
+   "name": "Speed Completion",
+   "description": "Achieve 100% game completion and finish the game in under 20 hours",
+   "image": "https://media.rawg.io/media/achievements/c48/c48dc508ab4e1ddad158028107e690d2_jeTd4LA.jpg",
+   "percent": "4.11"
+  },
+  {
+   "id": 112450,
+   "name": "Speedrun 1",
+   "description": "Complete the game in under 10 hours",
+   "image": "https://media.rawg.io/media/achievements/e98/e98acf1f79eb32abf36d5b1d4c6432a7.jpg",
+   "percent": "4.48"
+  },
+  {
+   "id": 116373,
+   "name": "Neglect",
+   "description": "Leave Zote to die",
+   "image": "https://media.rawg.io/media/achievements/276/276ec2b67a7611ef830d637e67efa43f.jpg",
+   "percent": "5.16"
+  },
+  {
+   "id": 1053383,
+   "name": "Pure Completion",
+   "description": "Achieve 112% game completion and finish the game",
+   "image": "https://media.rawg.io/media/achievements/812/812c2c1aa5fecc509ae6475217ccf546.jpg",
+   "percent": "6.71"
+  },
+  {
+   "id": 150103,
+   "name": "True Hunter",
+   "description": "Receive the Hunter's Mark",
+   "image": "https://media.rawg.io/media/achievements/f30/f30c409fb4bc082bd7c9ee74001e70ec.jpg",
+   "percent": "9.81"
+  },
+  {
+   "id": 150104,
+   "name": "Keen Hunter",
+   "description": "Record all of Hallownest's creatures in the Hunter's Journal",
+   "image": "https://media.rawg.io/media/achievements/d1c/d1cefe5700ffdbf8e73709b56db3fcf6.jpg",
+   "percent": "10.62"
+  }
+ ]
+}

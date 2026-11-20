@@ -44,8 +44,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.myth.movieapp.domain.model.MediaType
-import com.myth.movieapp.ui.common.LocalNavAnimatedScope
-import com.myth.movieapp.ui.common.LocalSharedTransitionScope
+import com.myth.core.design.LocalNavAnimatedScope
+import com.myth.core.design.LocalSharedTransitionScope
 import com.myth.movieapp.ui.common.OpenPerson
 import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.details.DetailsScreen

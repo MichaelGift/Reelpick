@@ -65,17 +65,17 @@ import com.myth.movieapp.domain.model.MediaType
 import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.ui.common.ErrorState
-import com.myth.movieapp.ui.common.GradientButton
+import com.myth.core.design.GradientButton
 import com.myth.movieapp.ui.common.PosterImage
-import com.myth.movieapp.ui.common.PosterShape
+import com.myth.core.design.PosterShape
 import com.myth.movieapp.ui.common.SeriesBadge
 import com.myth.movieapp.ui.common.Wordmark
 import com.myth.movieapp.ui.common.stableKey
 import com.myth.movieapp.ui.onboarding.OnboardingUiState.Companion.MIN_GENRES
 import com.myth.movieapp.ui.onboarding.OnboardingUiState.Companion.MIN_LIKES
 import com.myth.movieapp.ui.onboarding.OnboardingUiState.Step
-import com.myth.movieapp.ui.theme.Brand
-import com.myth.movieapp.ui.theme.EyebrowStyle
+import com.myth.core.design.Brand
+import com.myth.core.design.EyebrowStyle
 
 @Composable
 fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {

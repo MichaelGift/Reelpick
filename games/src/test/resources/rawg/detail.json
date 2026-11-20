@@ -1,0 +1,459 @@
+{
+ "id": 9767,
+ "slug": "hollow-knight",
+ "name": "Hollow Knight",
+ "name_original": "Hollow Knight",
+ "metacritic": 88,
+ "released": "2017-02-23",
+ "tba": false,
+ "updated": "2026-11-18T03:44:55",
+ "background_image": "https://media.rawg.io/media/games/4cf/4cfc6b7f1850590a4634b08bfab308ab.jpg",
+ "background_image_additional": "https://media.rawg.io/media/screenshots/ca4/ca4909c2379c114977b8b3309244e52a.jpg",
+ "website": "http://hollowknight.com",
+ "rating": 4.4,
+ "rating_top": 5,
+ "added": 11983,
+ "playtime": 7,
+ "screenshots_count": 50,
+ "movies_count": 4,
+ "creators_count": 4,
+ "achievements_count": 190,
+ "parent_achievements_count": 39,
+ "reddit_url": "https://www.reddit.com/r/HollowKnight/",
+ "reddit_name": "",
+ "reddit_description": "",
+ "reddit_logo": "",
+ "reddit_count": 8974,
+ "twitch_count": 147,
+ "youtube_count": 1000000,
+ "reviews_text_count": 61,
+ "ratings_count": 2784,
+ "suggestions_count": 508,
+ "metacritic_url": "https://www.metacritic.com/game/switch/hollow-knight",
+ "parents_count": 0,
+ "additions_count": 0,
+ "game_series_count": 1,
+ "user_game": null,
+ "reviews_count": 2845,
+ "saturated_color": "0f0f0f",
+ "dominant_color": "0f0f0f",
+ "parent_platforms": [
+  {
+   "platform": {
+    "id": 1,
+    "name": "PC",
+    "slug": "pc"
+   }
+  },
+  {
+   "platform": {
+    "id": 2,
+    "name": "PlayStation",
+    "slug": "playstation"
+   }
+  },
+  {
+   "platform": {
+    "id": 3,
+    "name": "Xbox",
+    "slug": "xbox"
+   }
+  },
+  {
+   "platform": {
+    "id": 5,
+    "name": "Apple Macintosh",
+    "slug": "mac"
+   }
+  },
+  {
+   "platform": {
+    "id": 6,
+    "name": "Linux",
+    "slug": "linux"
+   }
+  },
+  {
+   "platform": {
+    "id": 7,
+    "name": "Nintendo",
+    "slug": "nintendo"
+   }
+  }
+ ],
+ "platforms": [
+  {
+   "platform": {
+    "id": 18,
+    "name": "PlayStation 4",
+    "slug": "playstation4",
+    "image": null,
+    "year_end": null,
+    "year_start": null,
+    "games_count": 7056,
+    "image_background": "https://media.rawg.io/media/games/be0/be01c3d7d8795a45615da139322ca080.jpg"
+   },
+   "released_at": "2017-02-23",
+   "requirements": {}
+  },
+  {
+   "platform": {
+    "id": 6,
+    "name": "Linux",
+    "slug": "linux",
+    "image": null,
+    "year_end": null,
+    "year_start": null,
+    "games_count": 80693,
+    "image_background": "https://media.rawg.io/media/games/713/713269608dc8f2f40f5a670a14b2de94.jpg"
+   },
+   "released_at": "2017-02-23",
+   "requirements": {
+    "minimum": "Minimum:\nOS: Ubuntu 16.04 LTS (64bit)\nProcessor: Intel Core 2 Duo E5200\nMemory: 4 GB RAM\nGraphics: GeForce 9800GTX+ (1GB)\nStorage: 9 GB available space\nAdditional Notes: 1080p, 16:9 recommended",
+    "recommended": "Recommended:\nOS: Ubuntu 16.04 LTS (64bit)\nProcessor: Intel Core i5\nMemory: 8 GB RAM\nGraphics: GeForce GTX 560\nStorage: 9 GB available space\nAdditional Notes: 1080p, 16:9 recommended"
+   }
+  },
+  {
+   "platform": {
+    "id": 5,
+    "name": "macOS",
+    "slug": "macos",
+    "image": null,
+    "year_end": null,
+    "year_start": null,
+    "games_count": 108355,
+    "image_background": "https://media.rawg.io/media/games/021/021c4e21a1824d2526f925eff6324653.jpg"
+   },
+   "released_at": "2017-02-23",
+   "requirements": {
+    "minimum": "Minimum:\nOS: Mac OS 10.7 Lion\nProcessor: Intel Core i3\nMemory: 4 GB RAM\nGraphics: GeForce GTX 470\nStorage: 9 GB available space\nAdditional Notes: 1080p, 16:9 recommended",
+    "recommended": "Recommended:\nOS: Mac OS 10.12 Sierra\nProcessor: Intel Core i5\nMemory: 8 GB RAM\nGraphics: GeForce GTX 570\nStorage: 9 GB available space\nAdditional Notes: 1080p, 16:9 recommended"
+   }
+  },
+  {
+   "platform": {
+    "id": 4,
+    "name": "PC",
+    "slug": "pc",
+    "image": null,
+    "year_end": null,
+    "year_start": null,
+    "games_count": 563047,
+    "image_background": "https://media.rawg.io/media/games/20a/20aa03a10cda45239fe22d035c0ebe64.jpg"
+   },
+   "released_at": "2017-02-23",
+   "requirements": {
+    "minimum": "Minimum:\nOS: Windows 7\nProcessor: Intel Core 2 Duo E5200\nMemory: 4 GB RAM\nGraphics: GeForce 9800GTX+ (1GB)\nDirectX: Version 10\nStorage: 9 GB available space\nAdditional Notes: 1080p, 16:9 recommended",
+    "recommended": "Recommended:\nOS: Windows 10\nProcessor: Intel Core i5\nMemory: 8 GB RAM\nGraphics: GeForce GTX 560\nDirectX: Version 11\nStorage: 9 GB available space\nAdditional Notes: 1080p, 16:9 recommended"
+   }
+  },
+  {
+   "platform": {
+    "id": 7,
+    "name": "Nintendo Switch",
+    "slug": "nintendo-switch",
+    "image": null,
+    "year_end": null,
+    "year_start": null,
+    "games_count": 5809,
+    "image_background": "https://media.rawg.io/media/games/f46/f466571d536f2e3ea9e815ad17177501.jpg"
+   },
+   "released_at": "2017-02-23",
+   "requirements": {}
+  },
+  {
+   "platform": {
+    "id": 1,
+    "name": "Xbox One",
+    "slug": "xbox-one",
+    "image": null,
+    "year_end": null,
+    "year_start": null,
+    "games_count": 5751,
+    "image_background": "https://media.rawg.io/media/games/7cf/7cfc9220b401b7a300e409e539c9afd5.jpg"
+   },
+   "released_at": "2017-02-23",
+   "requirements": {}
+  }
+ ],
+ "stores": [
+  {
+   "id": 10646,
+   "url": "",
+   "store": {
+    "id": 1,
+    "name": "Steam",
+    "slug": "steam",
+    "domain": "store.steampowered.com",
+    "games_count": 125316,
+    "image_background": "https://media.rawg.io/media/games/d82/d82990b9c67ba0d2d09d4e6fa88885a7.jpg"
+   }
+  },
+  {
+   "id": 26919,
+   "url": "",
+   "store": {
+    "id": 5,
+    "name": "GOG",
+    "slug": "gog",
+    "domain": "gog.com",
+    "games_count": 7847,
+    "image_background": "https://media.rawg.io/media/games/63f/63f0e68688cad279ed38cde931dbfcdb.jpg"
+   }
+  },
+  {
+   "id": 48908,
+   "url": "",
+   "store": {
+    "id": 6,
+    "name": "Nintendo Store",
+    "slug": "nintendo",
+    "domain": "nintendo.com",
+    "games_count": 9162,
+    "image_background": "https://media.rawg.io/media/games/f46/f466571d536f2e3ea9e815ad17177501.jpg"
+   }
+  },
+  {
+   "id": 296863,
+   "url": "",
+   "store": {
+    "id": 2,
+    "name": "Xbox Store",
+    "slug": "xbox-store",
+    "domain": "microsoft.com",
+    "games_count": 4944,
+    "image_background": "https://media.rawg.io/media/games/20a/20aa03a10cda45239fe22d035c0ebe64.jpg"
+   }
+  },
+  {
+   "id": 296864,
+   "url": "",
+   "store": {
+    "id": 3,
+    "name": "PlayStation Store",
+    "slug": "playstation-store",
+    "domain": "store.playstation.com",
+    "games_count": 8092,
+    "image_background": "https://media.rawg.io/media/games/4a0/4a0a1316102366260e6f38fd2a9cfdce.jpg"
+   }
+  }
+ ],
+ "developers": [
+  {
+   "id": 3748,
+   "name": "Team Cherry",
+   "slug": "team-cherry",
+   "games_count": 3,
+   "image_background": "https://media.rawg.io/media/games/4cf/4cfc6b7f1850590a4634b08bfab308ab.jpg"
+  }
+ ],
+ "genres": [
+  {
+   "id": 4,
+   "name": "Action",
+   "slug": "action",
+   "games_count": 192319,
+   "image_background": "https://media.rawg.io/media/games/4a0/4a0a1316102366260e6f38fd2a9cfdce.jpg"
+  },
+  {
+   "id": 51,
+   "name": "Indie",
+   "slug": "indie",
+   "games_count": 87822,
+   "image_background": "https://media.rawg.io/media/games/174/1743b3dd185bda4a7be349347d4064df.jpg"
+  },
+  {
+   "id": 83,
+   "name": "Platformer",
+   "slug": "platformer",
+   "games_count": 100953,
+   "image_background": "https://media.rawg.io/media/games/718/71891d2484a592d871e91dc826707e1c.jpg"
+  }
+ ],
+ "tags": [
+  {
+   "id": 31,
+   "name": "Singleplayer",
+   "slug": "singleplayer",
+   "language": "eng",
+   "games_count": 252466,
+   "image_background": "https://media.rawg.io/media/games/7fa/7fa0b586293c5861ee32490e953a4996.jpg"
+  },
+  {
+   "id": 40847,
+   "name": "Steam Achievements",
+   "slug": "steam-achievements",
+   "language": "eng",
+   "games_count": 52620,
+   "image_background": "https://media.rawg.io/media/games/120/1201a40e4364557b124392ee50317b99.jpg"
+  },
+  {
+   "id": 40836,
+   "name": "Full controller support",
+   "slug": "full-controller-support",
+   "language": "eng",
+   "games_count": 24458,
+   "image_background": "https://media.rawg.io/media/games/d82/d82990b9c67ba0d2d09d4e6fa88885a7.jpg"
+  },
+  {
+   "id": 40849,
+   "name": "Steam Cloud",
+   "slug": "steam-cloud",
+   "language": "eng",
+   "games_count": 26295,
+   "image_background": "https://media.rawg.io/media/games/d1a/d1a2e99ade53494c6330a0ed945fe823.jpg"
+  },
+  {
+   "id": 13,
+   "name": "Atmospheric",
+   "slug": "atmospheric",
+   "language": "eng",
+   "games_count": 40117,
+   "image_background": "https://media.rawg.io/media/games/120/1201a40e4364557b124392ee50317b99.jpg"
+  },
+  {
+   "id": 7808,
+   "name": "steam-trading-cards",
+   "slug": "steam-trading-cards",
+   "language": "eng",
+   "games_count": 7568,
+   "image_background": "https://media.rawg.io/media/games/8cc/8cce7c0e99dcc43d66c8efd42f9d03e3.jpg"
+  },
+  {
+   "id": 42,
+   "name": "Great Soundtrack",
+   "slug": "great-soundtrack",
+   "language": "eng",
+   "games_count": 3450,
+   "image_background": "https://media.rawg.io/media/games/120/1201a40e4364557b124392ee50317b99.jpg"
+  },
+  {
+   "id": 118,
+   "name": "Story Rich",
+   "slug": "story-rich",
+   "language": "eng",
+   "games_count": 27552,
+   "image_background": "https://media.rawg.io/media/games/b8c/b8c243eaa0fbac8115e0cdccac3f91dc.jpg"
+  },
+  {
+   "id": 36,
+   "name": "Open World",
+   "slug": "open-world",
+   "language": "eng",
+   "games_count": 9367,
+   "image_background": "https://media.rawg.io/media/games/e6d/e6de699bd788497f4b52e2f41f9698f2.jpg"
+  },
+  {
+   "id": 45,
+   "name": "2D",
+   "slug": "2d",
+   "language": "eng",
+   "games_count": 208580,
+   "image_background": "https://media.rawg.io/media/games/234/23410661770ae13eac11066980834367.jpg"
+  },
+  {
+   "id": 6,
+   "name": "Exploration",
+   "slug": "exploration",
+   "language": "eng",
+   "games_count": 29581,
+   "image_background": "https://media.rawg.io/media/games/d7d/d7d33daa1892e2468cd0263d5dfc957e.jpg"
+  },
+  {
+   "id": 49,
+   "name": "Difficult",
+   "slug": "difficult",
+   "language": "eng",
+   "games_count": 14369,
+   "image_background": "https://media.rawg.io/media/games/21c/21cc15d233117c6809ec86870559e105.jpg"
+  },
+  {
+   "id": 115,
+   "name": "Controller",
+   "slug": "controller",
+   "language": "eng",
+   "games_count": 15216,
+   "image_background": "https://media.rawg.io/media/games/fc1/fc1307a2774506b5bd65d7e8424664a7.jpg"
+  },
+  {
+   "id": 88,
+   "name": "Cute",
+   "slug": "cute",
+   "language": "eng",
+   "games_count": 40140,
+   "image_background": "https://media.rawg.io/media/games/43f/43f4f3a50651f371c147ecce8ee841a9.jpg"
+  },
+  {
+   "id": 336,
+   "name": "controller support",
+   "slug": "controller-support",
+   "language": "eng",
+   "games_count": 293,
+   "image_background": "https://media.rawg.io/media/screenshots/2fc/2fc6994425146f9dba3133400b414e29.jpg"
+  },
+  {
+   "id": 40,
+   "name": "Dark Fantasy",
+   "slug": "dark-fantasy",
+   "language": "eng",
+   "games_count": 5786,
+   "image_background": "https://media.rawg.io/media/games/21a/21ad672cedee9b4378abb6c2d2e626ee.jpg"
+  },
+  {
+   "id": 113,
+   "name": "Side Scroller",
+   "slug": "side-scroller",
+   "language": "eng",
+   "games_count": 11926,
+   "image_background": "https://media.rawg.io/media/games/d1a/d1a1202a378607b6c635c8f18ace95dd.jpg"
+  },
+  {
+   "id": 218,
+   "name": "Multiple Endings",
+   "slug": "multiple-endings",
+   "language": "eng",
+   "games_count": 11729,
+   "image_background": "https://media.rawg.io/media/games/baf/baf9905270314e07e6850cffdb51df41.jpg"
+  },
+  {
+   "id": 259,
+   "name": "Metroidvania",
+   "slug": "metroidvania",
+   "language": "eng",
+   "games_count": 4740,
+   "image_background": "https://media.rawg.io/media/games/598/59851e152a6898c8bf79069b5bf2f4db.jpg"
+  },
+  {
+   "id": 258,
+   "name": "Hand-drawn",
+   "slug": "hand-drawn",
+   "language": "eng",
+   "games_count": 9388,
+   "image_background": "https://media.rawg.io/media/screenshots/c8a/c8a2d3c82dc11dcec380103d92580af2.jpeg"
+  },
+  {
+   "id": 204,
+   "name": "Gothic",
+   "slug": "gothic",
+   "language": "eng",
+   "games_count": 1194,
+   "image_background": "https://media.rawg.io/media/screenshots/b22/b22fd6e7dc6fc22118439c9d8fd810c3.jpg"
+  }
+ ],
+ "publishers": [
+  {
+   "id": 3440,
+   "name": "Team Cherry",
+   "slug": "team-cherry",
+   "games_count": 3,
+   "image_background": "https://media.rawg.io/media/games/4cf/4cfc6b7f1850590a4634b08bfab308ab.jpg"
+  }
+ ],
+ "esrb_rating": {
+  "id": 2,
+  "name": "Everyone 10+",
+  "slug": "everyone-10-plus"
+ },
+ "clip": null,
+ "description_raw": "Hollow Knight is a Metroidvania-type game developed by an indie studio named Team Cherry.\r\n\r\nMost of the game's story is told through the in-world items, tablets, and thoughts of other characters. Many plot aspects are told to the player indirectly or through the secret areas that provide a bit of l"
+}

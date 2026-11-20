@@ -1,10 +1,11 @@
 name: Release
 
 # Publishes a signed APK as a GitHub Release whenever a version tag is pushed:
-#   git tag v1.2.0 && git push origin v1.2.0
+#   Reelpick:  git tag v1.2.0 && git push origin v1.2.0
+#   Playpick:  git tag playpick-v1.0.0 && git push origin playpick-v1.0.0
 on:
   push:
-    tags: ['v*']
+    tags: ['v*', 'playpick-v*']
 
 concurrency:
   group: release-${{ github.ref }}
@@ -20,6 +21,7 @@ jobs:
 
     env:
       TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
+      RAWG_API_KEY: ${{ secrets.RAWG_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +35,13 @@ jobs:
             exit 1
           fi
 
+      - name: Pick the app from the tag
+        run: |
+          case "$GITHUB_REF_NAME" in
+            playpick-v*) { echo "MODULE=games"; echo "APP_NAME=Playpick"; echo "APP_SLUG=playpick"; echo "TAG_VERSION=${GITHUB_REF_NAME#playpick-v}"; } >> "$GITHUB_ENV" ;;
+            *)           { echo "MODULE=app"; echo "APP_NAME=Reelpick"; echo "APP_SLUG=reelpick"; echo "TAG_VERSION=${GITHUB_REF_NAME#v}"; } >> "$GITHUB_ENV" ;;
+          esac
+
       - name: Check signing secrets
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -44,16 +53,18 @@ jobs:
           for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
             if [ -z "${!name}" ]; then echo "::error::Repository secret $name is not set."; missing=1; fi
           done
-          if [ -z "$TMDB_ACCESS_TOKEN" ]; then
+          if [ "$MODULE" = app ] && [ -z "$TMDB_ACCESS_TOKEN" ]; then
             echo "::warning::Repository secret TMDB_ACCESS_TOKEN is not set; the APK will show a 'missing token' message instead of movies."
+          fi
+          if [ "$MODULE" = games ] && [ -z "$RAWG_API_KEY" ]; then
+            echo "::warning::Repository secret RAWG_API_KEY is not set; the APK will show a 'missing key' message instead of games."
           fi
           exit $missing
 
       - name: Compute version
         run: |
-          # v1.2.0 -> 1.2.0 (also accepts v.1.2.0)
-          VERSION_NAME="${GITHUB_REF_NAME#v}"
-          VERSION_NAME="${VERSION_NAME#.}"
+          # v1.2.0 / playpick-v1.2.0 -> 1.2.0 (also accepts v.1.2.0)
+          VERSION_NAME="${TAG_VERSION#.}"
           SHORT_SHA="$(git rev-parse --short HEAD)"
           # versionCode must only ever increase; this workflow's run number does. The offset keeps
           # it above the versionCode (2) that local builds use, so releases install over them.
@@ -63,7 +74,7 @@ jobs:
             echo "VERSION_CODE=$VERSION_CODE"
             echo "SHORT_SHA=$SHORT_SHA"
           } >> "$GITHUB_ENV"
-          echo "Releasing $GITHUB_REF_NAME as versionName=$VERSION_NAME, versionCode=$VERSION_CODE ($SHORT_SHA)"
+          echo "Releasing $APP_NAME $GITHUB_REF_NAME as versionName=$VERSION_NAME, versionCode=$VERSION_CODE ($SHORT_SHA)"
 
       - uses: actions/setup-java@v4
         with:
@@ -73,7 +84,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Unit tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew :$MODULE:testDebugUnitTest :core:recommend:test
 
       - name: Decode keystore
         env:
@@ -87,17 +98,17 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleRelease -PversionName="$VERSION_NAME" -PversionCode="$VERSION_CODE"
+        run: ./gradlew :$MODULE:assembleRelease -PversionName="$VERSION_NAME" -PversionCode="$VERSION_CODE"
 
       - name: Verify signature
         run: |
-          APK=app/build/outputs/apk/release/app-release.apk
+          APK=$MODULE/build/outputs/apk/release/$MODULE-release.apk
           APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
           # Fails the step if the APK is unsigned or the signature is invalid.
           "$APKSIGNER" verify "$APK"
           # Log which key signed it (output format varies across build-tools versions).
           "$APKSIGNER" verify --print-certs "$APK" | grep -E "certificate (DN|SHA-256)" || true
-          cp "$APK" "reelpick-$GITHUB_REF_NAME.apk"
+          cp "$APK" "$APP_SLUG-$TAG_VERSION.apk"
 
       - name: Create GitHub Release
         env:
@@ -105,9 +116,9 @@ jobs:
         run: |
           flags=()
           case "$GITHUB_REF_NAME" in *-*) flags+=(--prerelease) ;; esac
-          gh release create "$GITHUB_REF_NAME" "reelpick-$GITHUB_REF_NAME.apk" \
+          gh release create "$GITHUB_REF_NAME" "$APP_SLUG-$TAG_VERSION.apk" \
             --verify-tag \
-            --title "Reelpick $GITHUB_REF_NAME" \
+            --title "$APP_NAME $TAG_VERSION" \
             --notes "Built from \`$SHORT_SHA\` · versionCode $VERSION_CODE" \
             --generate-notes \
             "${flags[@]}"

@@ -80,6 +80,8 @@ room {
 }
 
 dependencies {
+    implementation(project(":core:recommend"))
+    implementation(project(":core:design"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)

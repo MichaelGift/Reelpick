@@ -3,6 +3,8 @@ package com.myth.movieapp.ui.person
 import com.myth.movieapp.domain.model.Person
 import com.myth.movieapp.domain.model.PersonCredit
 import com.myth.movieapp.domain.recommend.TasteProfile
+import com.myth.movieapp.domain.recommend.EMPTY
+import com.myth.movieapp.domain.recommend.build
 import com.myth.movieapp.testing.movie
 import com.myth.movieapp.testing.series
 import org.junit.Assert.assertEquals
