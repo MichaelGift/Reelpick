@@ -1,6 +1,7 @@
 package com.myth.movieapp.domain.recommend
 
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleKey
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
@@ -35,16 +36,16 @@ class RecommendationRanker(private val weights: Weights) {
     fun rank(
         candidates: List<Candidate>,
         profile: TasteProfile,
-        seeds: List<Movie>,
-        excludedIds: Set<Int>,
+        seeds: List<Title>,
+        excludedKeys: Set<TitleKey>,
         genreNames: Map<Int, String>,
         today: LocalDate,
     ): List<Recommendation> {
-        val seedIds = seeds.mapTo(mutableSetOf()) { it.id }
+        val seedKeys = seeds.mapTo(mutableSetOf()) { it.key }
         val scored = candidates
             .asSequence()
-            .filter { it.movie.id !in excludedIds && it.movie.id !in seedIds }
-            .distinctBy { it.movie.id }
+            .filter { it.movie.key !in excludedKeys && it.movie.key !in seedKeys }
+            .distinctBy { it.movie.key }
             .map { candidate ->
                 Recommendation(
                     movie = candidate.movie,
@@ -53,7 +54,7 @@ class RecommendationRanker(private val weights: Weights) {
                     match = profile.matchPercent(candidate.movie.genreIds),
                 )
             }
-            .sortedWith(compareByDescending<Recommendation> { it.score }.thenBy { it.movie.id })
+            .sortedWith(compareByDescending<Recommendation> { it.score }.thenBy { it.movie.id }.thenBy { it.movie.mediaType })
             .toList()
         return diversify(scored, profile)
     }
@@ -61,7 +62,7 @@ class RecommendationRanker(private val weights: Weights) {
     internal fun score(candidate: Candidate, profile: TasteProfile, today: LocalDate): Double {
         val movie = candidate.movie
         val genre = if (profile.isEmpty) 0.5 else (profile.affinity(movie.genreIds) + 1.0) / 2.0
-        val seed = candidate.seedIds.size.coerceAtMost(weights.seedSaturation).toDouble() / weights.seedSaturation
+        val seed = candidate.seedKeys.size.coerceAtMost(weights.seedSaturation).toDouble() / weights.seedSaturation
         return weights.genre * genre +
             weights.seed * seed +
             weights.quality * bayesianRating(movie) / 10.0 +
@@ -69,13 +70,13 @@ class RecommendationRanker(private val weights: Weights) {
     }
 
     /** Pulls averages from few votes toward [Weights.priorMean], so 9.0 from 12 votes doesn't win. */
-    internal fun bayesianRating(movie: Movie): Double {
+    internal fun bayesianRating(movie: Title): Double {
         val v = movie.voteCount.coerceAtLeast(0).toDouble()
         val m = weights.priorVotes.toDouble()
         return (v / (v + m)) * movie.voteAverage + (m / (v + m)) * weights.priorMean
     }
 
-    internal fun freshness(movie: Movie, today: LocalDate): Double {
+    internal fun freshness(movie: Title, today: LocalDate): Double {
         val released = movie.releaseLocalDate() ?: return 0.0
         if (!released.isBefore(today)) return 1.0
         val years = ChronoUnit.DAYS.between(released, today) / 365.25
@@ -85,11 +86,11 @@ class RecommendationRanker(private val weights: Weights) {
     private fun reasonFor(
         candidate: Candidate,
         profile: TasteProfile,
-        seeds: List<Movie>,
+        seeds: List<Title>,
         genreNames: Map<Int, String>,
     ): RecommendationReason {
         // Seeds are ordered most recent like first, so the reason cites the freshest memory.
-        seeds.firstOrNull { it.id in candidate.seedIds }?.let {
+        seeds.firstOrNull { it.key in candidate.seedKeys }?.let {
             return RecommendationReason.BecauseYouLiked(it.id, it.title)
         }
         val matched = candidate.movie.genreIds

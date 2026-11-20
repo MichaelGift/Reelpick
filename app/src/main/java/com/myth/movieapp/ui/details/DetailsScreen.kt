@@ -77,17 +77,22 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.myth.movieapp.domain.model.CastMember
+import com.myth.movieapp.domain.model.CrewMember
 import com.myth.movieapp.domain.model.FeedbackType
-import com.myth.movieapp.domain.model.Movie
-import com.myth.movieapp.domain.model.MovieDetails
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleDetails
+import com.myth.movieapp.domain.model.TvInfo
 import com.myth.movieapp.domain.model.WatchProvider
 import com.myth.movieapp.domain.model.WatchProviders
 import com.myth.movieapp.ui.common.Card
 import com.myth.movieapp.ui.common.ErrorState
 import com.myth.movieapp.ui.common.GlassIconButton
 import com.myth.movieapp.ui.common.GradientButton
-import com.myth.movieapp.ui.common.MovieRow
-import com.myth.movieapp.ui.common.OpenMovie
+import com.myth.movieapp.ui.common.TitleRow
+import com.myth.movieapp.ui.common.OpenPerson
+import com.myth.movieapp.ui.common.OpenTitle
+import com.myth.movieapp.ui.common.PersonAvatar
+import com.myth.movieapp.ui.common.personKey
 import com.myth.movieapp.ui.common.PosterImage
 import com.myth.movieapp.ui.common.RatingPill
 import com.myth.movieapp.ui.common.RowItem
@@ -101,14 +106,15 @@ import com.myth.movieapp.ui.theme.EyebrowStyle
 @Composable
 fun DetailsScreen(
     onBack: () -> Unit,
-    onMovieClick: OpenMovie,
+    onMovieClick: OpenTitle,
+    onPersonClick: OpenPerson,
     viewModel: DetailsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     // Once content scrolls under the status bar, back it with a scrim so it stays legible.
-    val scrimAlpha by animateFloatAsState(if (scrollState.value > 600) 0.96f else 0f, label = "statusScrim")
+    val scrimAlpha by animateFloatAsState(if (scrollState.value > 600) 1f else 0f, label = "statusScrim")
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         when (val content = state.content) {
@@ -122,6 +128,7 @@ fun DetailsScreen(
                 onFeedback = viewModel::toggleFeedback,
                 onToggleWatchlist = viewModel::toggleWatchlist,
                 onMovieClick = onMovieClick,
+                onPersonClick = onPersonClick,
             )
         }
         Row(
@@ -134,7 +141,7 @@ fun DetailsScreen(
         ) {
             GlassIconButton(Icons.AutoMirrored.Rounded.ArrowBack, "Back", onBack)
             Spacer(Modifier.weight(1f))
-            (state.content as? DetailsContent.Loaded)?.details?.movie?.let { movie ->
+            (state.content as? DetailsContent.Loaded)?.details?.title?.let { movie ->
                 Text(
                     movie.title,
                     style = MaterialTheme.typography.titleMedium,
@@ -144,13 +151,13 @@ fun DetailsScreen(
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.weight(1f))
-                GlassIconButton(Icons.Rounded.Share, "Share", onClick = { context.shareMovie(movie) })
+                GlassIconButton(Icons.Rounded.Share, "Share", onClick = { context.shareTitle(movie) })
             }
         }
     }
 }
 
-private fun android.content.Context.shareMovie(movie: Movie) {
+private fun android.content.Context.shareTitle(movie: Title) {
     val text = listOfNotNull(movie.title, movie.releaseYear?.let { "($it)" }).joinToString(" ") +
         " https://www.themoviedb.org/movie/${movie.id}"
     val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
@@ -231,10 +238,11 @@ private fun DetailsBody(
     scrollState: ScrollState,
     onFeedback: (FeedbackType) -> Unit,
     onToggleWatchlist: () -> Unit,
-    onMovieClick: OpenMovie,
+    onMovieClick: OpenTitle,
+    onPersonClick: OpenPerson,
 ) {
     val details = content.details
-    val movie = details.movie
+    val movie = details.title
     val context = LocalContext.current
 
     Column(Modifier.verticalScroll(scrollState).navigationBarsPadding().padding(bottom = 24.dp)) {
@@ -244,13 +252,18 @@ private fun DetailsBody(
             scrollState = scrollState,
         ) {
             Text(
-                listOfNotNull(movie.releaseYear, details.runtimeMinutes?.let(::formatRuntime)).joinToString("  ·  "),
+                details.tv?.let(::seriesMeta)
+                    ?: listOfNotNull(movie.releaseYear, details.runtimeMinutes?.let(::formatRuntime)).joinToString("  ·  "),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (movie.voteCount > 0) {
                 Spacer(Modifier.height(6.dp))
                 RatingPill(movie.voteAverage, votes = movie.voteCount)
+            }
+            details.tv?.let { tv ->
+                Spacer(Modifier.height(8.dp))
+                SeriesStatus(tv)
             }
         }
 
@@ -280,14 +293,25 @@ private fun DetailsBody(
 
             Synopsis(details, Modifier.padding(horizontal = 20.dp))
 
+            details.tv?.takeIf { it.seasons.isNotEmpty() }?.let { SeasonsRow(it, fallbackPoster = movie.posterPath) }
+
             WhereToWatch(details.watchProviders, content.region, Modifier.padding(horizontal = 20.dp)) { link ->
                 context.startActivity(Intent(Intent.ACTION_VIEW, link.toUri()))
             }
 
-            if (details.cast.isNotEmpty()) CastRow(details.cast)
+            val crew = details.tv?.creators ?: details.crew
+            if (crew.isNotEmpty()) {
+                CrewRow(
+                    title = if (details.tv != null) "Created by" else "Behind the camera",
+                    crew = crew,
+                    onPersonClick = onPersonClick,
+                )
+            }
+
+            if (details.cast.isNotEmpty()) CastRow(details.cast, onPersonClick)
 
             if (content.moreLikeThis.isNotEmpty()) {
-                MovieRow(
+                TitleRow(
                     title = "More like this",
                     eyebrow = "If you like ${movie.title}",
                     items = content.moreLikeThis.map { RowItem(it) },
@@ -301,7 +325,7 @@ private fun DetailsBody(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun GenreTags(details: MovieDetails) {
+private fun GenreTags(details: TitleDetails) {
     if (details.genres.isEmpty()) return
     FlowRow(
         Modifier.padding(horizontal = 20.dp),
@@ -407,7 +431,7 @@ private fun androidx.compose.foundation.layout.RowScope.Segment(
 }
 
 @Composable
-private fun Synopsis(details: MovieDetails, modifier: Modifier = Modifier) {
+private fun Synopsis(details: TitleDetails, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
     Column(modifier.animateContentSize()) {
         details.tagline?.let {
@@ -415,13 +439,13 @@ private fun Synopsis(details: MovieDetails, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(10.dp))
         }
         Text(
-            details.movie.overview.ifBlank { "No synopsis available." },
+            details.title.overview.ifBlank { "No synopsis available." },
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = if (expanded) Int.MAX_VALUE else 4,
             overflow = TextOverflow.Ellipsis,
         )
-        if (details.movie.overview.length > 220) {
+        if (details.title.overview.length > 220) {
             TextButton(onClick = { expanded = !expanded }, contentPadding = PaddingValues(0.dp)) {
                 Text(if (expanded) "Show less" else "Read more")
             }
@@ -503,24 +527,21 @@ private fun ProviderGroup(title: String, providers: List<WatchProvider>) {
 }
 
 @Composable
-private fun CastRow(cast: List<CastMember>) {
+private fun CastRow(cast: List<CastMember>, onPersonClick: OpenPerson) {
     Column {
         SectionHeader("Cast")
         Spacer(Modifier.height(14.dp))
         LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             items(cast, key = { it.id }) { member ->
-                Column(Modifier.width(84.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.size(80.dp)) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Rounded.Person, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
-                            AsyncImage(
-                                model = TmdbImages.profile(member.profilePath),
-                                contentDescription = member.name,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                    }
+                val key = personKey("cast", member.id)
+                Column(
+                    Modifier
+                        .width(84.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onPersonClick(member.id, member.name, member.profilePath, key) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    PersonAvatar(member.profilePath, contentDescription = member.name, size = 80.dp, sharedKey = key)
                     Spacer(Modifier.height(8.dp))
                     Text(member.name, style = MaterialTheme.typography.labelLarge, maxLines = 2, textAlign = TextAlign.Center)
                     member.character?.let {
@@ -533,6 +554,47 @@ private fun CastRow(cast: List<CastMember>) {
                             textAlign = TextAlign.Center,
                         )
                     }
+                    member.episodeCount?.let {
+                        Text(
+                            plural(it, "episode"),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Directors and writers for a film, creators for a series: each opens their page. */
+@Composable
+private fun CrewRow(title: String, crew: List<CrewMember>, onPersonClick: OpenPerson) {
+    Column {
+        SectionHeader(title)
+        Spacer(Modifier.height(12.dp))
+        LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            items(crew, key = { it.id }) { member ->
+                val key = personKey("crew", member.id)
+                Surface(
+                    onClick = { onPersonClick(member.id, member.name, member.profilePath, key) },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ) {
+                    Row(Modifier.padding(start = 6.dp, end = 16.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        PersonAvatar(member.profilePath, contentDescription = null, size = 40.dp, sharedKey = key)
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text(member.name, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+                            Text(
+                                member.job,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -542,5 +604,74 @@ private fun CastRow(cast: List<CastMember>) {
 /** "A", "A and B", "A, B and C". */
 private fun List<String>.naturalJoin(): String =
     if (size <= 2) joinToString(" and ") else dropLast(1).joinToString(", ") + " and " + last()
+
+/** "2011–2019 · 8 seasons · 73 episodes", or "2019– · ..." while still running. */
+private fun seriesMeta(tv: TvInfo): String = listOfNotNull(
+    tv.firstAirYear?.let { first ->
+        when {
+            tv.inProduction -> "$first–"
+            tv.lastAirYear == null || tv.lastAirYear == first -> first
+            else -> "$first–${tv.lastAirYear}"
+        }
+    },
+    plural(tv.seasonCount, "season").takeIf { tv.seasonCount > 0 },
+    plural(tv.episodeCount, "episode").takeIf { tv.episodeCount > 0 },
+).joinToString("  ·  ")
+
+private fun plural(count: Int, noun: String) = "$count ${if (count == 1) noun else noun + "s"}"
+
+/** Status pill ("Returning series" / "Ended") plus the networks it airs on. */
+@Composable
+private fun SeriesStatus(tv: TvInfo) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        tv.status?.let { status ->
+            val returning = tv.inProduction || status.startsWith("Returning", ignoreCase = true)
+            Surface(
+                shape = CircleShape,
+                color = if (returning) Brand.tokens.match.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceContainerHighest,
+            ) {
+                Text(
+                    if (returning) "Returning series" else status,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (returning) Brand.tokens.match else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+        }
+        if (tv.networks.isNotEmpty()) {
+            Text(
+                tv.networks.joinToString(" · ") { it.name },
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SeasonsRow(tv: TvInfo, fallbackPoster: String?) {
+    Column {
+        SectionHeader("Seasons", subtitle = listOf(plural(tv.seasonCount, "season"), plural(tv.episodeCount, "episode")).joinToString("  ·  "))
+        Spacer(Modifier.height(14.dp))
+        LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            items(tv.seasons, key = { it.number }) { season ->
+                Column(Modifier.width(112.dp)) {
+                    PosterImage(season.posterPath ?: fallbackPoster, contentDescription = season.name)
+                    Spacer(Modifier.height(8.dp))
+                    Text(season.name, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        listOfNotNull(if (season.episodeCount > 0) plural(season.episodeCount, "episode") else "Announced", season.airDate?.take(4)).joinToString("  ·  "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+            }
+        }
+    }
+}
 
 private fun formatRuntime(minutes: Int): String = if (minutes >= 60) "${minutes / 60}h ${minutes % 60}m" else "${minutes}m"

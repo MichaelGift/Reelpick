@@ -4,14 +4,17 @@ import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.myth.movieapp.data.local.AppDatabase
+import com.myth.movieapp.data.local.FeedCacheEntity
 import com.myth.movieapp.data.repository.FeedCacheRepositoryImpl
 import com.myth.movieapp.data.repository.FeedbackRepositoryImpl
 import com.myth.movieapp.data.repository.WatchlistRepositoryImpl
+import com.myth.movieapp.domain.model.FeedScope
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.recommend.Recommendation
 import com.myth.movieapp.domain.recommend.RecommendationReason
 import com.myth.movieapp.testing.movie
+import com.myth.movieapp.testing.movieKey
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -47,10 +50,10 @@ class LocalRepositoriesTest {
         val stored = repo.feedback.first().single()
         assertEquals(arrival, stored.movie)
         assertEquals(FeedbackType.DISLIKE, stored.type)
-        assertEquals(FeedbackType.DISLIKE, repo.feedbackFor(1).first())
+        assertEquals(FeedbackType.DISLIKE, repo.feedbackFor(movieKey(1)).first())
 
-        repo.clearFeedback(1)
-        assertNull(repo.feedbackFor(1).first())
+        repo.clearFeedback(movieKey(1))
+        assertNull(repo.feedbackFor(movieKey(1)).first())
     }
 
     @Test
@@ -58,11 +61,11 @@ class LocalRepositoriesTest {
         val repo = WatchlistRepositoryImpl(db.watchlistDao(), clock)
 
         repo.add(movie(1))
-        assertTrue(repo.isInWatchlist(1).first())
+        assertTrue(repo.isInWatchlist(movieKey(1)).first())
         assertEquals(listOf(1), repo.watchlist.first().map { it.id })
 
-        repo.remove(1)
-        assertFalse(repo.isInWatchlist(1).first())
+        repo.remove(movieKey(1))
+        assertFalse(repo.isInWatchlist(movieKey(1)).first())
     }
 
     @Test
@@ -80,8 +83,17 @@ class LocalRepositoriesTest {
             generatedAtMillis = 42,
         )
 
-        repo.save(feed)
+        repo.save(FeedScope.TV, feed)
 
-        assertEquals(feed, repo.cachedFeed.first())
+        assertEquals(feed, repo.cachedFeed(FeedScope.TV).first())
+        assertNull(repo.cachedFeed(FeedScope.ALL).first()) // scopes are cached separately
+    }
+
+    @Test
+    fun undecodableFeedCacheReadsAsEmpty() = runTest {
+        // e.g. a cache written by an older app version with a different feed shape
+        db.feedCacheDao().upsert(FeedCacheEntity(FeedScope.ALL.ordinal, "{\"topPicks\": 42}"))
+
+        assertNull(FeedCacheRepositoryImpl(db.feedCacheDao()).cachedFeed(FeedScope.ALL).first())
     }
 }

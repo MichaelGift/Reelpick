@@ -3,7 +3,7 @@ package com.myth.movieapp.ui.watchlist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myth.movieapp.domain.model.FeedbackType
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.repository.FeedbackRepository
 import com.myth.movieapp.domain.repository.WatchlistRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,28 +21,28 @@ class WatchlistViewModel @Inject constructor(
 ) : ViewModel() {
 
     /** Null while the first Room emission is pending, so the screen doesn't flash "empty". */
-    val movies: StateFlow<List<Movie>?> = watchlist.watchlist
-        .map<List<Movie>, List<Movie>?> { it }
+    val movies: StateFlow<List<Title>?> = watchlist.watchlist
+        .map<List<Title>, List<Title>?> { it }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    fun remove(movie: Movie) {
-        viewModelScope.launch { watchlist.remove(movie.id) }
+    fun remove(movie: Title) {
+        viewModelScope.launch { watchlist.remove(movie.key) }
     }
 
-    fun restore(movie: Movie) {
+    fun restore(movie: Title) {
         viewModelScope.launch { watchlist.add(movie) }
     }
 
-    fun markWatched(movie: Movie) {
+    fun markWatched(movie: Title) {
         viewModelScope.launch {
             feedback.setFeedback(movie, FeedbackType.WATCHED)
-            watchlist.remove(movie.id)
+            watchlist.remove(movie.key)
         }
     }
 
-    fun undoWatched(movie: Movie) {
+    fun undoWatched(movie: Title) {
         viewModelScope.launch {
-            feedback.clearFeedback(movie.id)
+            feedback.clearFeedback(movie.key)
             watchlist.add(movie)
         }
     }

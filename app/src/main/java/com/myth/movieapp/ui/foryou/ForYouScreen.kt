@@ -3,6 +3,7 @@ package com.myth.movieapp.ui.foryou
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -36,6 +37,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -52,6 +54,10 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -59,7 +65,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.FeedScope
+import com.myth.movieapp.domain.model.MediaType
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.recommend.Recommendation
 import com.myth.movieapp.domain.recommend.TasteSummary
@@ -70,9 +79,9 @@ import com.myth.movieapp.ui.common.LoadingFeed
 import com.myth.movieapp.ui.common.MIN_DISPLAY_MATCH
 import com.myth.movieapp.ui.common.MatchBadge
 import com.myth.movieapp.ui.common.MessageState
-import com.myth.movieapp.ui.common.MovieActionsSheet
-import com.myth.movieapp.ui.common.MovieRow
-import com.myth.movieapp.ui.common.OpenMovie
+import com.myth.movieapp.ui.common.TitleActionsSheet
+import com.myth.movieapp.ui.common.TitleRow
+import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.common.RankedRow
 import com.myth.movieapp.ui.common.ReasonPill
 import com.myth.movieapp.ui.common.RowItem
@@ -88,12 +97,12 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForYouScreen(
-    onMovieClick: OpenMovie,
+    onMovieClick: OpenTitle,
     viewModel: ForYouViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    var actionsFor by remember { mutableStateOf<Movie?>(null) }
+    var actionsFor by remember { mutableStateOf<Title?>(null) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(state.error, state.notice, state.feed) {
@@ -131,12 +140,12 @@ fun ForYouScreen(
                 )
             }
         }
-        TopBar(listState)
+        TopBar(listState, scope = state.scope, onScope = viewModel::setScope)
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
 
     actionsFor?.let { movie ->
-        MovieActionsSheet(
+        TitleActionsSheet(
             movie = movie,
             onDismiss = { actionsFor = null },
             onFeedback = { viewModel.onFeedback(movie, it) },
@@ -147,7 +156,7 @@ fun ForYouScreen(
 
 /** Transparent over the hero, fading to a solid bar once the hero scrolls away. */
 @Composable
-private fun TopBar(listState: LazyListState) {
+private fun TopBar(listState: LazyListState, scope: FeedScope, onScope: (FeedScope) -> Unit) {
     val solid by remember {
         derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 600 }
     }
@@ -155,19 +164,65 @@ private fun TopBar(listState: LazyListState) {
         if (solid) MaterialTheme.colorScheme.background else Color.Transparent,
         label = "topBar",
     )
-    Box(Modifier.fillMaxWidth().background(background).statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp)) {
+    Column(Modifier.fillMaxWidth().background(background).statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp)) {
         Wordmark(markSize = 26.dp, color = if (solid) MaterialTheme.colorScheme.onBackground else Color.White)
+        Spacer(Modifier.height(12.dp))
+        ScopeSwitch(scope, onScope, overArtwork = !solid)
     }
+}
+
+/** All / Movies / Series. Over the hero it uses fixed light-on-dark colours to stay readable. */
+@Composable
+private fun ScopeSwitch(selected: FeedScope, onSelect: (FeedScope) -> Unit, overArtwork: Boolean) {
+    val haptics = LocalHapticFeedback.current
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FeedScope.entries.forEach { scope ->
+            val isSelected = scope == selected
+            val container = when {
+                isSelected -> if (overArtwork) Color.White else MaterialTheme.colorScheme.onBackground
+                overArtwork -> Color.Black.copy(alpha = 0.35f)
+                else -> MaterialTheme.colorScheme.surfaceContainerHigh
+            }
+            val content = when {
+                isSelected -> if (overArtwork) Color.Black else MaterialTheme.colorScheme.background
+                overArtwork -> Color.White
+                else -> MaterialTheme.colorScheme.onSurface
+            }
+            Surface(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onSelect(scope)
+                },
+                shape = CircleShape,
+                color = container,
+                contentColor = content,
+                border = if (isSelected) null else BorderStroke(1.dp, content.copy(alpha = 0.25f)),
+                modifier = Modifier.semantics { this.selected = isSelected },
+            ) {
+                Text(
+                    scope.label(),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+                )
+            }
+        }
+    }
+}
+
+private fun FeedScope.label() = when (this) {
+    FeedScope.ALL -> "All"
+    FeedScope.MOVIES -> "Movies"
+    FeedScope.TV -> "Series"
 }
 
 @Composable
 private fun FeedContent(
     feed: ForYouFeed,
     listState: LazyListState,
-    watchlistIds: Set<Int>,
-    onMovieClick: OpenMovie,
-    onMovieLongClick: (Movie) -> Unit,
-    onToggleWatchlist: (Movie) -> Unit,
+    watchlistIds: Set<TitleKey>,
+    onMovieClick: OpenTitle,
+    onMovieLongClick: (Title) -> Unit,
+    onToggleWatchlist: (Title) -> Unit,
 ) {
     val hero = feed.topPicks.take(HERO_COUNT)
     BoxWithConstraints {
@@ -207,7 +262,7 @@ private fun FeedContent(
             val matchById = feed.topPicks.associate { it.movie.id to it.match }
             feed.becauseYouLiked.forEach { row ->
                 item(key = "seed-${row.seed.id}") {
-                    MovieRow(
+                    TitleRow(
                         title = row.seed.title,
                         eyebrow = "Because you liked",
                         items = row.items.map { RowItem(it.movie, match = it.match) },
@@ -219,7 +274,7 @@ private fun FeedContent(
             }
             feed.genreRows.forEach { row ->
                 item(key = "genre-${row.genre.id}") {
-                    MovieRow(
+                    TitleRow(
                         title = row.genre.name,
                         eyebrow = "One of your genres",
                         items = row.items.map { RowItem(it.movie, match = it.match) },
@@ -231,7 +286,7 @@ private fun FeedContent(
             }
             if (feed.trending.isNotEmpty()) {
                 item(key = "trending") {
-                    MovieRow(
+                    TitleRow(
                         title = "Trending this week",
                         eyebrow = "Everyone's watching",
                         items = feed.trending.map { RowItem(it, match = matchById[it.id]) },
@@ -252,10 +307,10 @@ private fun HeroPager(
     genreNames: Map<Int, String>,
     height: Dp,
     listState: LazyListState,
-    watchlistIds: Set<Int>,
-    onOpen: (Movie) -> Unit,
-    onLongPress: (Movie) -> Unit,
-    onToggleWatchlist: (Movie) -> Unit,
+    watchlistIds: Set<TitleKey>,
+    onOpen: (Title) -> Unit,
+    onLongPress: (Title) -> Unit,
+    onToggleWatchlist: (Title) -> Unit,
 ) {
     val pagerState = rememberPagerState { picks.size }
     val dragged by pagerState.interactionSource.collectIsDraggedAsState()
@@ -302,7 +357,7 @@ private fun HeroPager(
                 HeroCopy(
                     pick = pick,
                     genreNames = genreNames,
-                    inWatchlist = pick.movie.id in watchlistIds,
+                    inWatchlist = pick.movie.key in watchlistIds,
                     onOpen = { onOpen(pick.movie) },
                     onToggleWatchlist = { onToggleWatchlist(pick.movie) },
                     modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, end = 20.dp, bottom = 36.dp),
@@ -341,6 +396,7 @@ private fun HeroCopy(
         Spacer(Modifier.height(8.dp))
         Text(
             listOfNotNull(
+                "Series".takeIf { movie.mediaType == MediaType.TV },
                 movie.releaseYear,
                 movie.genreIds.mapNotNull { genreNames[it] }.take(2).joinToString(", ").ifEmpty { null },
                 movie.ratingLabel(),

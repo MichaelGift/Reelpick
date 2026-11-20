@@ -3,6 +3,7 @@ package com.myth.movieapp.domain.recommend
 import com.myth.movieapp.domain.model.Feedback
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.testing.movie
+import com.myth.movieapp.testing.movieKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -29,7 +30,7 @@ class RecommendationRankerTest {
             candidates = listOf(candidate(1, listOf(action)), candidate(2, listOf(action)), candidate(3, listOf(action))),
             profile = profile(action),
             seeds = listOf(seed),
-            excludedIds = setOf(2),
+            excludedKeys = setOf(movieKey(2)),
             genreNames = names,
             today = today,
         )
@@ -44,11 +45,11 @@ class RecommendationRankerTest {
             candidates = listOf(
                 candidate(1, listOf(drama)),
                 candidate(2, listOf(comedy)),
-                candidate(3, listOf(comedy), CandidateOrigin.Seed(100)),
+                candidate(3, listOf(comedy), CandidateOrigin.Seed(movieKey(100))),
             ),
             profile = profile(comedy),
             seeds = listOf(seed),
-            excludedIds = emptySet(),
+            excludedKeys = emptySet(),
             genreNames = names,
             today = today,
         )
@@ -79,10 +80,10 @@ class RecommendationRankerTest {
         val older = movie(10, title = "Alien")
         val newer = movie(11, title = "Arrival")
         val result = ranker.rank(
-            candidates = listOf(candidate(1, listOf(drama), CandidateOrigin.Seed(10), CandidateOrigin.Seed(11))),
+            candidates = listOf(candidate(1, listOf(drama), CandidateOrigin.Seed(movieKey(10)), CandidateOrigin.Seed(movieKey(11)))),
             profile = profile(drama),
             seeds = listOf(newer, older),
-            excludedIds = emptySet(),
+            excludedKeys = emptySet(),
             genreNames = names,
             today = today,
         )
@@ -100,7 +101,7 @@ class RecommendationRankerTest {
                 emptyList(),
             ),
             seeds = emptyList(),
-            excludedIds = emptySet(),
+            excludedKeys = emptySet(),
             genreNames = names,
             today = today,
         ).associateBy { it.movie.id }
@@ -121,7 +122,7 @@ class RecommendationRankerTest {
             candidates = (1..4).map { candidate(it, listOf(action)) } + candidate(5, listOf(drama)),
             profile = p,
             seeds = emptyList(),
-            excludedIds = emptySet(),
+            excludedKeys = emptySet(),
             genreNames = names,
             today = today,
         ).map { it.movie.id }
@@ -138,7 +139,7 @@ class RecommendationRankerTest {
             ),
             profile = TasteProfile.EMPTY,
             seeds = emptyList(),
-            excludedIds = emptySet(),
+            excludedKeys = emptySet(),
             genreNames = names,
             today = today,
         )

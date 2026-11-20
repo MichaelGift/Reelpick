@@ -61,12 +61,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myth.movieapp.domain.model.Genre
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.MediaType
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.ui.common.ErrorState
 import com.myth.movieapp.ui.common.GradientButton
 import com.myth.movieapp.ui.common.PosterImage
 import com.myth.movieapp.ui.common.PosterShape
+import com.myth.movieapp.ui.common.SeriesBadge
 import com.myth.movieapp.ui.common.Wordmark
+import com.myth.movieapp.ui.common.stableKey
 import com.myth.movieapp.ui.onboarding.OnboardingUiState.Companion.MIN_GENRES
 import com.myth.movieapp.ui.onboarding.OnboardingUiState.Companion.MIN_LIKES
 import com.myth.movieapp.ui.onboarding.OnboardingUiState.Step
@@ -103,7 +107,7 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
             }
             Step.Movies -> StepScaffold(
                 stepLabel = "Step 2 of 2",
-                title = "Films you've enjoyed",
+                title = "Films & series you love",
                 subtitle = "Tap at least $MIN_LIKES. Each one becomes a seed for your recommendations.",
                 onBack = viewModel::back,
                 cta = if (state.likedIds.size < MIN_LIKES) "Pick ${MIN_LIKES - state.likedIds.size} more" else "Build my feed",
@@ -114,7 +118,7 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
                 when {
                     state.error != null -> ErrorState(state.error!!, viewModel::continueToMovies)
                     state.isLoading -> Loading()
-                    else -> MoviePicker(state.movies, state.likedIds, viewModel::toggleLike)
+                    else -> TitlePicker(state.movies, state.likedIds, viewModel::toggleLike)
                 }
             }
         }
@@ -125,7 +129,7 @@ fun OnboardingScreen(viewModel: OnboardingViewModel = hiltViewModel()) {
 private fun Loading() = Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
 
 @Composable
-private fun Welcome(mosaic: List<Movie>, onStart: () -> Unit) {
+private fun Welcome(mosaic: List<Title>, onStart: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         PosterMosaic(mosaic, Modifier.fillMaxSize())
         Box(
@@ -162,7 +166,7 @@ private fun Welcome(mosaic: List<Movie>, onStart: () -> Unit) {
 
 /** Three tilted columns of posters drifting in opposite directions behind the welcome copy. */
 @Composable
-private fun PosterMosaic(movies: List<Movie>, modifier: Modifier = Modifier) {
+private fun PosterMosaic(movies: List<Title>, modifier: Modifier = Modifier) {
     if (movies.size < 6) return
     val drift by rememberInfiniteTransition(label = "mosaic").animateFloat(
         initialValue = 0f,
@@ -320,7 +324,7 @@ private fun GenreGrid(genres: List<Genre>, selected: Set<Int>, onToggle: (Int) -
 }
 
 @Composable
-private fun MoviePicker(movies: List<Movie>, likedIds: Set<Int>, onToggle: (Int) -> Unit) {
+private fun TitlePicker(movies: List<Title>, likedIds: Set<TitleKey>, onToggle: (TitleKey) -> Unit) {
     val haptics = LocalHapticFeedback.current
     LazyVerticalGrid(
         columns = GridCells.Adaptive(104.dp),
@@ -328,8 +332,8 @@ private fun MoviePicker(movies: List<Movie>, likedIds: Set<Int>, onToggle: (Int)
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        items(movies, key = { it.id }) { movie ->
-            val liked = movie.id in likedIds
+        items(movies, key = { it.stableKey }) { movie ->
+            val liked = movie.key in likedIds
             val scale by animateFloatAsState(if (liked) 0.94f else 1f, label = "pickScale")
             Box(
                 Modifier
@@ -337,10 +341,11 @@ private fun MoviePicker(movies: List<Movie>, likedIds: Set<Int>, onToggle: (Int)
                     .clip(PosterShape)
                     .clickable {
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onToggle(movie.id)
+                        onToggle(movie.key)
                     },
             ) {
                 PosterImage(movie.posterPath, contentDescription = movie.title)
+                if (movie.mediaType == MediaType.TV) SeriesBadge(Modifier.align(Alignment.TopStart).padding(8.dp))
                 if (liked) {
                     Box(
                         Modifier

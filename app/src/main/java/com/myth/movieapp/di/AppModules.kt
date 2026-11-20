@@ -10,17 +10,18 @@ import com.myth.movieapp.data.local.AppDatabase
 import com.myth.movieapp.data.local.FeedCacheDao
 import com.myth.movieapp.data.local.FeedbackDao
 import com.myth.movieapp.data.local.GenreDao
+import com.myth.movieapp.data.local.MIGRATION_1_2
 import com.myth.movieapp.data.local.WatchlistDao
 import com.myth.movieapp.data.prefs.UserPreferencesRepositoryImpl
 import com.myth.movieapp.data.remote.AuthInterceptor
 import com.myth.movieapp.data.remote.TmdbApi
 import com.myth.movieapp.data.repository.FeedCacheRepositoryImpl
 import com.myth.movieapp.data.repository.FeedbackRepositoryImpl
-import com.myth.movieapp.data.repository.MovieRepositoryImpl
+import com.myth.movieapp.data.repository.TitleRepositoryImpl
 import com.myth.movieapp.data.repository.WatchlistRepositoryImpl
 import com.myth.movieapp.domain.repository.FeedCacheRepository
 import com.myth.movieapp.domain.repository.FeedbackRepository
-import com.myth.movieapp.domain.repository.MovieRepository
+import com.myth.movieapp.domain.repository.TitleRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
 import com.myth.movieapp.domain.repository.WatchlistRepository
 import dagger.Binds
@@ -81,7 +82,9 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
-        Room.databaseBuilder(context, AppDatabase::class.java, "movies.db").build()
+        Room.databaseBuilder(context, AppDatabase::class.java, "movies.db")
+            .addMigrations(MIGRATION_1_2)
+            .build()
 
     @Provides fun provideFeedbackDao(db: AppDatabase): FeedbackDao = db.feedbackDao()
     @Provides fun provideWatchlistDao(db: AppDatabase): WatchlistDao = db.watchlistDao()
@@ -103,7 +106,7 @@ object DomainModule {
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
-    @Binds abstract fun bindMovieRepository(impl: MovieRepositoryImpl): MovieRepository
+    @Binds abstract fun bindMovieRepository(impl: TitleRepositoryImpl): TitleRepository
     @Binds abstract fun bindFeedbackRepository(impl: FeedbackRepositoryImpl): FeedbackRepository
     @Binds abstract fun bindWatchlistRepository(impl: WatchlistRepositoryImpl): WatchlistRepository
     @Binds abstract fun bindFeedCacheRepository(impl: FeedCacheRepositoryImpl): FeedCacheRepository

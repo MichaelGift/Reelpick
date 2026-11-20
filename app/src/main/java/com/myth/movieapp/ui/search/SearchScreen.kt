@@ -23,6 +23,9 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -59,15 +62,24 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myth.movieapp.domain.model.Genre
+import com.myth.movieapp.domain.model.PersonSummary
 import com.myth.movieapp.ui.common.ErrorState
 import com.myth.movieapp.ui.common.MessageState
-import com.myth.movieapp.ui.common.OpenMovie
+import com.myth.movieapp.ui.common.OpenPerson
+import com.myth.movieapp.ui.common.OpenTitle
+import com.myth.movieapp.ui.common.PersonAvatar
+import com.myth.movieapp.ui.common.personKey
 import com.myth.movieapp.ui.common.PosterCard
 import com.myth.movieapp.ui.common.posterKey
+import com.myth.movieapp.ui.common.stableKey
 import com.myth.movieapp.ui.theme.EyebrowStyle
 
 @Composable
-fun SearchScreen(onMovieClick: OpenMovie, viewModel: SearchViewModel = hiltViewModel()) {
+fun SearchScreen(
+    onMovieClick: OpenTitle,
+    onPersonClick: OpenPerson,
+    viewModel: SearchViewModel = hiltViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val recent by viewModel.recentSearches.collectAsStateWithLifecycle()
     val genres by viewModel.genres.collectAsStateWithLifecycle()
@@ -112,12 +124,12 @@ fun SearchScreen(onMovieClick: OpenMovie, viewModel: SearchViewModel = hiltViewM
             state.error != null && state.results.isEmpty() -> ErrorState(state.error!!, onRetry = {
                 state.browsing?.let(viewModel::browse) ?: viewModel.onSubmit()
             })
-            state.searched && state.results.isEmpty() && !state.isLoading -> MessageState(
+            state.searched && state.results.isEmpty() && state.people.isEmpty() && !state.isLoading -> MessageState(
                 icon = Icons.Outlined.SearchOff,
                 title = "No matches",
                 message = "Nothing on TMDB matches “${state.query.trim()}”. Try a shorter title.",
             )
-            else -> Results(state, onMovieClick, viewModel::loadMore, onClearBrowse = viewModel::clearBrowse)
+            else -> Results(state, onMovieClick, onPersonClick, viewModel::loadMore, onClearBrowse = viewModel::clearBrowse)
         }
     }
 }
@@ -173,6 +185,33 @@ private fun Discover(
     }
 }
 
+@Composable
+private fun PeopleRow(people: List<PersonSummary>, onPersonClick: OpenPerson) {
+    Column {
+        Text("PEOPLE", style = EyebrowStyle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(10.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            items(people, key = { it.id }) { person ->
+                val key = personKey("search", person.id)
+                Column(
+                    Modifier
+                        .width(84.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onPersonClick(person.id, person.name, person.profilePath, key) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    PersonAvatar(person.profilePath, contentDescription = person.name, size = 72.dp, sharedKey = key)
+                    Spacer(Modifier.height(6.dp))
+                    Text(person.name, style = MaterialTheme.typography.labelLarge, maxLines = 2, textAlign = TextAlign.Center)
+                    person.knownForDepartment?.let {
+                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    }
+                }
+            }
+        }
+    }
+}
+
 private val genreTints = listOf(
     Color(0xFFB2453A), Color(0xFF3A63B2), Color(0xFF2F8A6E), Color(0xFF9A6A2E),
     Color(0xFF6A3AB2), Color(0xFFB23A7A), Color(0xFF2E7F96), Color(0xFF7A8A2E),
@@ -194,7 +233,13 @@ private fun GenreTile(genre: Genre, onClick: () -> Unit) {
 }
 
 @Composable
-private fun Results(state: SearchUiState, onMovieClick: OpenMovie, onLoadMore: () -> Unit, onClearBrowse: () -> Unit) {
+private fun Results(
+    state: SearchUiState,
+    onMovieClick: OpenTitle,
+    onPersonClick: OpenPerson,
+    onLoadMore: () -> Unit,
+    onClearBrowse: () -> Unit,
+) {
     val gridState: LazyGridState = rememberLazyGridState()
     val nearEnd by remember {
         derivedStateOf {
@@ -222,8 +267,16 @@ private fun Results(state: SearchUiState, onMovieClick: OpenMovie, onLoadMore: (
                 }
             }
         }
-        items(state.results, key = { it.id }) { movie ->
-            val key = posterKey("search", movie.id)
+        if (state.people.isNotEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) { PeopleRow(state.people, onPersonClick) }
+            if (state.results.isNotEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Text("FILMS & SERIES", style = EyebrowStyle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        items(state.results, key = { it.stableKey }) { movie ->
+            val key = posterKey("search", movie)
             PosterCard(
                 movie = movie,
                 width = 200.dp,

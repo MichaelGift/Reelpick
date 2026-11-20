@@ -1,6 +1,6 @@
-# Reelpick: movie recommendations you can see through
+# Reelpick: film and series recommendations you can see through
 
-An Android app that learns what you like and builds a personal **For You** feed. Every pick shows a **taste match** and **why it's there** ("Because you liked *Arrival*"), and the app shows you the taste profile it has learned. Built with Jetpack Compose, Hilt, Room and the TMDB API.
+An Android app that learns what you like and builds a personal **For You** feed of films and TV series. Every pick shows a **taste match** and **why it's there** ("Because you liked *Arrival*"), and the app shows you the taste profile it has learned. Built with Jetpack Compose, Hilt, Room and the TMDB API.
 
 <table>
   <tr>
@@ -14,6 +14,12 @@ An Android app that learns what you like and builds a personal **For You** feed.
     <td align="center"><img src="docs/screenshots/02-genres.jpg" width="200" alt="Onboarding step 1: picking genres"><br><sub><b>Pick genres</b></sub></td>
     <td align="center"><img src="docs/screenshots/03-seeds.jpg" width="200" alt="Onboarding step 2: picking five seed films"><br><sub><b>Pick seed films</b></sub></td>
     <td align="center"><img src="docs/screenshots/08-watchlist.jpg" width="200" alt="Watchlist poster grid"><br><sub><b>Watchlist</b> (offline)</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/09-scope-switch.jpg" width="200" alt="For You feed with the All, Movies and Series switch and a series in the hero"><br><sub><b>All / Movies / Series</b></sub></td>
+    <td align="center"><img src="docs/screenshots/10-series-details.jpg" width="200" alt="Series details with years, seasons, episodes, status and network"><br><sub><b>Series details</b></sub></td>
+    <td align="center"><img src="docs/screenshots/11-person.jpg" width="200" alt="Actor page with bio and known-for titles carrying taste matches"><br><sub><b>Cast &amp; crew pages</b></sub></td>
+    <td align="center"><img src="docs/screenshots/12-search-people.jpg" width="200" alt="Search results with a People row above films and series"><br><sub><b>Search</b>: people, films, series</sub></td>
   </tr>
 </table>
 
@@ -30,11 +36,12 @@ A dark-first, cinematic UI built from scratch as a small design system (`ui/them
 
 ## Features
 
-- **Onboarding**: a cinematic welcome over a drifting poster mosaic. Then pick 3 or more genres and at least 5 films you've enjoyed; these seed your taste profile.
-- **For You feed**: a full-bleed hero carousel, a ranked *Top 10 for you*, your taste profile, and rows for *Because you liked X*, *Your genres* and *Trending*. Pull to refresh, and long-press any poster to like, dislike, hide it or save it.
+- **Onboarding**: a cinematic welcome over a drifting poster mosaic. Then pick 3 or more genres and at least 5 films or series you've enjoyed; these seed your taste profile.
+- **For You feed**: an **All / Movies / Series** switch (instant and offline, remembered between launches), a full-bleed hero carousel, a ranked *Top 10 for you*, your taste profile, and rows for *Because you liked X*, *Your genres* and *Trending*. Pull to refresh, and long-press any poster to like, dislike, hide it or save it.
 - **Live re-ranking**: a dislike or "not interested" reorders the feed immediately, offline; a new like brings in fresh candidates.
-- **Movie details**: cast, trailer, runtime, genres, **where to watch** (stream, rent or buy for your region) and "More like this".
-- **Search**: debounced and paginated, with recent searches and *Browse by genre* tiles.
+- **Details**: cast, trailer, genres, **where to watch** (stream, rent or buy for your region) and "More like this". Films show runtime and who directed and wrote them; series show years, seasons, episodes, status, network, creators and each actor's episode count.
+- **Cast & crew pages**: tap any actor, director, writer or creator for their bio, age, *Known for* and a filmography split by department, with your taste match on every title.
+- **Search**: one box for films, series and people, debounced and paginated, with recent searches and *Browse by genre* tiles.
 - **Watchlist**: an offline poster grid. Long-press to mark as watched or remove, with undo.
 - **Settings**: streaming region, light/dark/system theme, and a taste-profile reset.
 
@@ -47,16 +54,20 @@ The engine lives in [`domain/recommend`](app/src/main/java/com/myth/movieapp/dom
    | Signal | Weight per genre |
    |---|---|
    | Genre picked in onboarding | +1 |
-   | Liked movie | +2 |
+   | Liked film or series | +2 |
    | Disliked / not interested | −2 |
    | On watchlist | +1 |
 
-   Weights are normalised so the strongest genre has a weight of 1. A movie's fit is the cosine similarity between its genres and this profile.
+   Weights are normalised so the strongest genre has a weight of 1. A title's fit is the cosine similarity between its genres and this profile.
+
+   Films and series share one genre space: [`GenreMap`](app/src/main/java/com/myth/movieapp/data/remote/GenreMap.kt) splits TV's combined genres (such as *Sci-Fi & Fantasy*) into the movie genres, so liking a show teaches the same profile as liking a film.
 
 2. **Candidates** ([`CandidateSource`](app/src/main/java/com/myth/movieapp/domain/recommend/CandidateSource.kt)), fetched concurrently:
-   - TMDB recommendations for your 5 most recent likes (the "seeds")
-   - Well-voted movies in your top 3 genres
-   - This week's trending movies, for exploration
+   - TMDB recommendations for your 5 most recent likes (the "seeds"): a liked show brings shows, a liked film brings films
+   - Well-voted films and series in your top 3 genres
+   - This week's trending films and series, for exploration
+
+   TMDB reuses numeric ids across films and TV, so every title is identified by `(media type, id)`: in Room, in the exclusions and in navigation.
 
    The feed fails only if every source fails.
 
@@ -69,15 +80,15 @@ The engine lives in [`domain/recommend`](app/src/main/java/com/myth/movieapp/dom
          + 0.05 · freshness         (linear decay over 10 years)
    ```
 
-   Movies you've rated, saved or watched are filtered out. A diversity pass then stops more than two picks in a row from sharing the same dominant genre. Each pick keeps the reason it was chosen.
+   Titles you've rated, saved or watched are filtered out. A diversity pass then stops more than two picks in a row from sharing the same dominant genre. Each pick keeps the reason it was chosen.
 
-4. **Feed** ([`GetForYouFeedUseCase`](app/src/main/java/com/myth/movieapp/domain/recommend/GetForYouFeedUseCase.kt)) splits the ranked list into sections and caches it in Room, so the home screen opens instantly and works offline.
+4. **Feed** ([`GetForYouFeedUseCase`](app/src/main/java/com/myth/movieapp/domain/recommend/GetForYouFeedUseCase.kt)) ranks one candidate pool, builds the sections for each scope (all, films, series) and caches them in Room, so the home screen opens instantly, switching scope needs no network, and it all works offline.
 
 ## Architecture
 
 ```
 ui/            Compose screens + @HiltViewModel per screen (StateFlow UI state)
-  onboarding/  foryou/  details/  search/  watchlist/  settings/  navigation/  theme/  common/
+  onboarding/  foryou/  details/  person/  search/  watchlist/  settings/  navigation/  theme/  common/
 domain/        Pure Kotlin: models, repository interfaces, recommendation engine
 data/          Retrofit (TMDB), Room (feedback, watchlist, genres, feed cache), DataStore (prefs)
 di/            Hilt modules
@@ -85,12 +96,13 @@ di/            Hilt modules
 
 - Single activity with type-safe Navigation Compose routes.
 - Offline-first: the feed, watchlist and ratings live in Room. The network only adds or refreshes data.
+- The Room schema is exported to `app/schemas`, and upgrades migrate existing likes and watchlists rather than wiping them (covered by a `MigrationTestHelper` test).
 - Repositories return `Result` rather than throwing. The UI maps errors to clear messages (offline, bad token, missing token).
 - The TMDB token is sent as a bearer header by an OkHttp interceptor, so it never appears in URLs or logs.
 
 ## Tech stack
 
-Kotlin 2.1 · Jetpack Compose (Material 3) · Navigation Compose · Hilt · KSP · Room · DataStore · Retrofit + OkHttp + kotlinx.serialization · Coil 3 · Coroutines/Flow · JUnit, Turbine, Compose UI tests · GitHub Actions
+Kotlin 2.3 · Jetpack Compose (Material 3) · Navigation Compose · Hilt · KSP · Room · DataStore · Retrofit + OkHttp + kotlinx.serialization · Coil 3 · Coroutines/Flow · JUnit, Turbine, Compose UI tests · GitHub Actions
 
 ## How to run
 
@@ -116,12 +128,12 @@ Kotlin 2.1 · Jetpack Compose (Material 3) · Navigation Compose · Hilt · KSP 
 ./gradlew connectedDebugAndroidTest
 ```
 
-- **Unit tests** (JVM) cover the taste profile, the ranker, candidate sourcing, the feed use case, and the onboarding and search ViewModels.
-- **Instrumented tests** cover the Room repositories, plus Compose UI tests for onboarding and the details screen's watchlist action.
+- **Unit tests** (JVM) cover the taste profile, the ranker, candidate sourcing (including the film/series id collision), feed scopes, the genre map, the TMDB mappers, and the onboarding, search and person ViewModels.
+- **Instrumented tests** cover the Room repositories and the v1 → v2 migration, plus Compose UI tests for onboarding, the details screen (films and series) and the person page.
 
 ## Attribution
 
-This product uses the TMDB API but is not endorsed or certified by TMDB. Movie data and images © [TMDB](https://www.themoviedb.org/). Streaming availability is provided by JustWatch.
+This product uses the TMDB API but is not endorsed or certified by TMDB. Film, TV and people data and images © [TMDB](https://www.themoviedb.org/). Streaming availability is provided by JustWatch.
 
 ## Contributing
 

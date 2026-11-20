@@ -7,11 +7,12 @@ import com.myth.movieapp.domain.recommend.GetForYouFeedUseCase
 import com.myth.movieapp.domain.recommend.RecommendationRanker
 import com.myth.movieapp.testing.FakeFeedCacheRepository
 import com.myth.movieapp.testing.FakeFeedbackRepository
-import com.myth.movieapp.testing.FakeMovieRepository
+import com.myth.movieapp.testing.FakeTitleRepository
 import com.myth.movieapp.testing.FakeUserPreferencesRepository
 import com.myth.movieapp.testing.FakeWatchlistRepository
 import com.myth.movieapp.testing.MainDispatcherRule
 import com.myth.movieapp.testing.movie
+import com.myth.movieapp.testing.tasteProfileUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -29,7 +30,7 @@ class OnboardingViewModelTest {
     @get:Rule val main = MainDispatcherRule()
 
     private val genres = listOf(Genre(1, "Action"), Genre(2, "Comedy"), Genre(3, "Drama"), Genre(4, "Horror"))
-    private val movies = FakeMovieRepository().apply {
+    private val movies = FakeTitleRepository().apply {
         this.genres = this@OnboardingViewModelTest.genres
         genres.forEach { g ->
             discover[g.id] = Result.success((1..4).map { i -> movie(g.id * 10 + i, listOf(g.id)).copy(posterPath = "/p.jpg") })
@@ -45,7 +46,8 @@ class OnboardingViewModelTest {
         feedback,
         prefs,
         GetForYouFeedUseCase(
-            movies, feedback, watchlist, prefs, cache, CandidateSource(movies), RecommendationRanker(), Clock.systemUTC(),
+            movies, tasteProfileUseCase(feedback, watchlist, prefs), cache, CandidateSource(movies),
+            RecommendationRanker(), Clock.systemUTC(),
         ),
     )
 
@@ -76,7 +78,7 @@ class OnboardingViewModelTest {
         vm.continueToMovies()
         advanceUntilIdle()
 
-        val picks = vm.state.value.movies.take(5).map { it.id }
+        val picks = vm.state.value.movies.take(5).map { it.key }
         picks.take(4).forEach(vm::toggleLike)
         assertFalse(vm.state.value.canFinish)
         vm.toggleLike(picks[4])
@@ -84,7 +86,7 @@ class OnboardingViewModelTest {
         advanceUntilIdle()
 
         val saved = feedback.feedback.first()
-        assertEquals(picks.toSet(), saved.map { it.movie.id }.toSet())
+        assertEquals(picks.toSet(), saved.map { it.movie.key }.toSet())
         assertTrue(saved.all { it.type == FeedbackType.LIKE })
         val p = prefs.preferences.first()
         assertTrue(p.onboardingComplete)

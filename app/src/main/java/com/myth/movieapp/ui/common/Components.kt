@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -59,14 +60,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.MediaType
+import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.ui.theme.Brand
 import com.myth.movieapp.ui.theme.EyebrowStyle
 import com.myth.movieapp.ui.theme.Fraunces
 import java.util.Locale
 
 /** One poster in a row, with optional caption and taste match. */
-data class RowItem(val movie: Movie, val caption: String? = null, val match: Int? = null)
+data class RowItem(val movie: Title, val caption: String? = null, val match: Int? = null)
 
 val PosterShape = RoundedCornerShape(14.dp)
 
@@ -107,7 +109,7 @@ fun PosterImage(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PosterCard(
-    movie: Movie,
+    movie: Title,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     width: Dp = 132.dp,
@@ -125,6 +127,7 @@ fun PosterCard(
     ) {
         Box(Modifier.shadow(10.dp, PosterShape, ambientColor = Color.Black, spotColor = Color.Black)) {
             PosterImage(movie.posterPath, contentDescription = movie.title, sharedKey = sharedKey)
+            if (movie.mediaType == MediaType.TV) SeriesBadge(Modifier.align(Alignment.TopStart).padding(8.dp))
             if (match != null && match >= MIN_DISPLAY_MATCH) {
                 MatchBadge(match, Modifier.align(Alignment.BottomStart).padding(8.dp))
             }
@@ -148,7 +151,47 @@ fun PosterCard(
     }
 }
 
-fun Movie.ratingLabel(): String? = if (voteCount > 0) "★ " + String.format(Locale.US, "%.1f", voteAverage) else null
+fun Title.ratingLabel(): String? = if (voteCount > 0) "★ " + String.format(Locale.US, "%.1f", voteAverage) else null
+
+/** Round headshot with a placeholder; [sharedKey] lets it morph into the person page header. */
+@Composable
+fun PersonAvatar(
+    profilePath: String?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    size: Dp = 80.dp,
+    sharedKey: String? = null,
+) {
+    Box(
+        modifier
+            .size(size)
+            .sharedPoster(sharedKey)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(Icons.Rounded.Person, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+        AsyncImage(
+            model = TmdbImages.profile(profilePath),
+            contentDescription = contentDescription,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+/** Marks a poster as a TV series so mixed rows stay readable. Sits on artwork: fixed colours. */
+@Composable
+fun SeriesBadge(modifier: Modifier = Modifier) {
+    Surface(modifier = modifier, shape = RoundedCornerShape(6.dp), color = Color.Black.copy(alpha = 0.72f)) {
+        Text(
+            "SERIES",
+            style = EyebrowStyle.copy(fontSize = 9.sp),
+            color = Color.White,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+        )
+    }
+}
 
 /** Taste-match chip: a small green dot plus "92%". Shown on artwork, so colours are fixed. */
 @Composable
@@ -231,15 +274,15 @@ fun SectionHeader(
 }
 
 @Composable
-fun MovieRow(
+fun TitleRow(
     title: String,
     items: List<RowItem>,
     section: String,
-    onMovieClick: OpenMovie,
+    onMovieClick: OpenTitle,
     modifier: Modifier = Modifier,
     eyebrow: String? = null,
     subtitle: String? = null,
-    onMovieLongClick: ((Movie) -> Unit)? = null,
+    onMovieLongClick: ((Title) -> Unit)? = null,
 ) {
     Column(modifier) {
         SectionHeader(title, eyebrow = eyebrow, subtitle = subtitle)
@@ -248,8 +291,8 @@ fun MovieRow(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            itemsIndexed(items, key = { _, item -> item.movie.id }) { _, item ->
-                val key = posterKey(section, item.movie.id)
+            itemsIndexed(items, key = { _, item -> item.movie.stableKey }) { _, item ->
+                val key = posterKey(section, item.movie)
                 PosterCard(
                     movie = item.movie,
                     caption = item.caption,
@@ -270,11 +313,11 @@ fun RankedRow(
     title: String,
     items: List<RowItem>,
     section: String,
-    onMovieClick: OpenMovie,
+    onMovieClick: OpenTitle,
     modifier: Modifier = Modifier,
     eyebrow: String? = null,
     subtitle: String? = null,
-    onMovieLongClick: ((Movie) -> Unit)? = null,
+    onMovieLongClick: ((Title) -> Unit)? = null,
 ) {
     val numeral = TextStyle(
         fontFamily = Fraunces,
@@ -286,8 +329,8 @@ fun RankedRow(
         SectionHeader(title, eyebrow = eyebrow, subtitle = subtitle)
         Spacer(Modifier.height(10.dp))
         LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            itemsIndexed(items, key = { _, item -> item.movie.id }) { index, item ->
-                val key = posterKey(section, item.movie.id)
+            itemsIndexed(items, key = { _, item -> item.movie.stableKey }) { index, item ->
+                val key = posterKey(section, item.movie)
                 Box(
                     Modifier
                         .width(if (index + 1 >= 10) 196.dp else 168.dp)
@@ -304,6 +347,9 @@ fun RankedRow(
                     )
                     Box(Modifier.align(Alignment.TopEnd).width(118.dp).shadow(12.dp, PosterShape)) {
                         PosterImage(item.movie.posterPath, contentDescription = item.movie.title, sharedKey = key)
+                        if (item.movie.mediaType == MediaType.TV) {
+                            SeriesBadge(Modifier.align(Alignment.TopStart).padding(8.dp))
+                        }
                         item.match?.takeIf { it >= MIN_DISPLAY_MATCH }?.let {
                             MatchBadge(it, Modifier.align(Alignment.BottomStart).padding(8.dp))
                         }

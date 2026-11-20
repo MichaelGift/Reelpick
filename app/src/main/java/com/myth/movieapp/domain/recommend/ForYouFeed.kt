@@ -1,7 +1,7 @@
 package com.myth.movieapp.domain.recommend
 
 import com.myth.movieapp.domain.model.Genre
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -23,7 +23,7 @@ sealed interface RecommendationReason {
 
 @Serializable
 data class Recommendation(
-    val movie: Movie,
+    val movie: Title,
     val score: Double,
     val reason: RecommendationReason,
     /** Taste match 0–100, or null when there's no meaningful overlap with the user's profile. */
@@ -43,7 +43,7 @@ data class TasteSummary(
 )
 
 @Serializable
-data class SeedRow(val seed: Movie, val items: List<Recommendation>)
+data class SeedRow(val seed: Title, val items: List<Recommendation>)
 
 @Serializable
 data class GenreRow(val genre: Genre, val items: List<Recommendation>)
@@ -53,7 +53,7 @@ data class ForYouFeed(
     val topPicks: List<Recommendation>,
     val becauseYouLiked: List<SeedRow>,
     val genreRows: List<GenreRow>,
-    val trending: List<Movie>,
+    val trending: List<Title>,
     val generatedAtMillis: Long,
     val genreNames: Map<Int, String> = emptyMap(),
     val taste: TasteSummary? = null,

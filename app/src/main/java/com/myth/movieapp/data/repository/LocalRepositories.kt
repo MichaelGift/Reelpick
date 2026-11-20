@@ -6,9 +6,11 @@ import com.myth.movieapp.data.local.FeedbackDao
 import com.myth.movieapp.data.local.FeedbackEntity
 import com.myth.movieapp.data.local.WatchlistDao
 import com.myth.movieapp.data.local.WatchlistEntity
+import com.myth.movieapp.domain.model.FeedScope
 import com.myth.movieapp.domain.model.Feedback
 import com.myth.movieapp.domain.model.FeedbackType
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.repository.FeedCacheRepository
 import com.myth.movieapp.domain.repository.FeedbackRepository
@@ -16,6 +18,7 @@ import com.myth.movieapp.domain.repository.WatchlistRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
 import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,16 +29,16 @@ class FeedbackRepositoryImpl @Inject constructor(
     private val clock: Clock,
 ) : FeedbackRepository {
     override val feedback: Flow<List<Feedback>> = dao.observeAll().map { rows ->
-        rows.map { Feedback(it.movie, it.type, it.timestampMillis) }
+        rows.map { Feedback(it.title, it.type, it.timestampMillis) }
     }
 
-    override fun feedbackFor(movieId: Int): Flow<FeedbackType?> =
-        dao.observeType(movieId).distinctUntilChanged()
+    override fun feedbackFor(key: TitleKey): Flow<FeedbackType?> =
+        dao.observeType(key.type, key.id).distinctUntilChanged()
 
-    override suspend fun setFeedback(movie: Movie, type: FeedbackType) =
-        dao.upsert(FeedbackEntity(movie.id, type, clock.millis(), movie))
+    override suspend fun setFeedback(title: Title, type: FeedbackType) =
+        dao.upsert(FeedbackEntity(title.mediaType, title.id, type, clock.millis(), title))
 
-    override suspend fun clearFeedback(movieId: Int) = dao.delete(movieId)
+    override suspend fun clearFeedback(key: TitleKey) = dao.delete(key.type, key.id)
 
     override suspend fun clearAll() = dao.deleteAll()
 }
@@ -45,23 +48,30 @@ class WatchlistRepositoryImpl @Inject constructor(
     private val dao: WatchlistDao,
     private val clock: Clock,
 ) : WatchlistRepository {
-    override val watchlist: Flow<List<Movie>> = dao.observeAll().map { rows -> rows.map { it.movie } }
+    override val watchlist: Flow<List<Title>> = dao.observeAll().map { rows -> rows.map { it.title } }
 
-    override fun isInWatchlist(movieId: Int): Flow<Boolean> =
-        dao.observeContains(movieId).distinctUntilChanged()
+    override fun isInWatchlist(key: TitleKey): Flow<Boolean> =
+        dao.observeContains(key.type, key.id).distinctUntilChanged()
 
-    override suspend fun add(movie: Movie) = dao.upsert(WatchlistEntity(movie.id, clock.millis(), movie))
+    override suspend fun add(title: Title) =
+        dao.upsert(WatchlistEntity(title.mediaType, title.id, clock.millis(), title))
 
-    override suspend fun remove(movieId: Int) = dao.delete(movieId)
+    override suspend fun remove(key: TitleKey) = dao.delete(key.type, key.id)
 }
 
 @Singleton
 class FeedCacheRepositoryImpl @Inject constructor(
     private val dao: FeedCacheDao,
 ) : FeedCacheRepository {
-    override val cachedFeed: Flow<ForYouFeed?> = dao.observe().map { it?.feed }
+    private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun save(feed: ForYouFeed) = dao.upsert(FeedCacheEntity(feed = feed))
+    // A cache from an older app version may not decode; it's only a cache, so start fresh.
+    override fun cachedFeed(scope: FeedScope): Flow<ForYouFeed?> = dao.observe(scope.ordinal).map { row ->
+        row?.let { runCatching { json.decodeFromString(ForYouFeed.serializer(), it.feed) }.getOrNull() }
+    }
+
+    override suspend fun save(scope: FeedScope, feed: ForYouFeed) =
+        dao.upsert(FeedCacheEntity(scope.ordinal, json.encodeToString(ForYouFeed.serializer(), feed)))
 
     override suspend fun clear() = dao.clear()
 }

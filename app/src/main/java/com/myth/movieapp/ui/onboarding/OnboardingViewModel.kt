@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Genre
-import com.myth.movieapp.domain.model.Movie
+import com.myth.movieapp.domain.model.MediaType
+import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.domain.recommend.GetForYouFeedUseCase
 import com.myth.movieapp.domain.repository.FeedbackRepository
-import com.myth.movieapp.domain.repository.MovieRepository
+import com.myth.movieapp.domain.repository.TitleRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
 import com.myth.movieapp.ui.common.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,11 +25,11 @@ import javax.inject.Inject
 data class OnboardingUiState(
     val step: Step = Step.Welcome,
     /** Posters for the welcome screen's backdrop; decorative, so failures just leave it empty. */
-    val mosaic: List<Movie> = emptyList(),
+    val mosaic: List<Title> = emptyList(),
     val genres: List<Genre> = emptyList(),
     val selectedGenreIds: Set<Int> = emptySet(),
-    val movies: List<Movie> = emptyList(),
-    val likedIds: Set<Int> = emptySet(),
+    val movies: List<Title> = emptyList(),
+    val likedIds: Set<TitleKey> = emptySet(),
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val error: String? = null,
@@ -45,7 +47,7 @@ data class OnboardingUiState(
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
-    private val movies: MovieRepository,
+    private val movies: TitleRepository,
     private val feedback: FeedbackRepository,
     private val preferences: UserPreferencesRepository,
     private val forYouFeed: GetForYouFeedUseCase,
@@ -58,7 +60,7 @@ class OnboardingViewModel @Inject constructor(
         loadGenres()
         viewModelScope.launch {
             movies.popular().onSuccess { page ->
-                _state.update { it.copy(mosaic = page.movies.filter { m -> m.posterPath != null }) }
+                _state.update { it.copy(mosaic = page.titles.filter { m -> m.posterPath != null }) }
             }
         }
     }
@@ -84,19 +86,23 @@ class OnboardingViewModel @Inject constructor(
         _state.update { it.copy(step = OnboardingUiState.Step.Movies, isLoading = true, error = null) }
         viewModelScope.launch {
             val genreIds = _state.value.selectedGenreIds.toList()
-            // Popular picks per chosen genre, interleaved so every genre shows up near the top.
-            val perGenre = genreIds.map { id -> async { movies.discoverByGenre(id) } }.awaitAll()
-            val popular = movies.popular()
-            val lists = perGenre.mapNotNull { it.getOrNull() } + listOfNotNull(popular.getOrNull()?.movies)
+            // Popular films and series per chosen genre, interleaved so every genre and both types
+            // show up near the top.
+            val perGenre = genreIds.flatMap { id ->
+                MediaType.entries.map { type -> async { movies.discoverByGenre(type, id) } }
+            }.awaitAll()
+            val popular = MediaType.entries.map { type -> async { movies.popular(type).map { it.titles } } }.awaitAll()
+            val results = perGenre + popular
+            val lists = results.mapNotNull { it.getOrNull() }.filter { it.isNotEmpty() }
             if (lists.isEmpty()) {
-                val error = (perGenre + popular).firstNotNullOfOrNull { it.exceptionOrNull() }
+                val error = results.firstNotNullOfOrNull { it.exceptionOrNull() }
                 _state.update { it.copy(isLoading = false, error = error?.toUserMessage()) }
                 return@launch
             }
             val interleaved = (0 until lists.maxOf { it.size })
                 .flatMap { index -> lists.mapNotNull { it.getOrNull(index) } }
                 .filter { it.posterPath != null }
-                .distinctBy { it.id }
+                .distinctBy { it.key }
                 .take(MAX_MOVIES)
             _state.update { it.copy(movies = interleaved, isLoading = false) }
         }
@@ -109,8 +115,8 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    fun toggleLike(id: Int) = _state.update {
-        it.copy(likedIds = if (id in it.likedIds) it.likedIds - id else it.likedIds + id)
+    fun toggleLike(key: TitleKey) = _state.update {
+        it.copy(likedIds = if (key in it.likedIds) it.likedIds - key else it.likedIds + key)
     }
 
     fun finish() {
@@ -118,7 +124,7 @@ class OnboardingViewModel @Inject constructor(
         if (!current.canFinish) return
         _state.update { it.copy(isSaving = true) }
         viewModelScope.launch {
-            current.movies.filter { it.id in current.likedIds }.forEach {
+            current.movies.filter { it.key in current.likedIds }.forEach {
                 feedback.setFeedback(it, FeedbackType.LIKE)
             }
             forYouFeed.invalidate()
