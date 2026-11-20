@@ -46,9 +46,11 @@ import androidx.navigation.compose.rememberNavController
 import com.myth.movieapp.domain.model.MediaType
 import com.myth.movieapp.ui.common.LocalNavAnimatedScope
 import com.myth.movieapp.ui.common.LocalSharedTransitionScope
+import com.myth.movieapp.ui.common.OpenPerson
 import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.details.DetailsScreen
 import com.myth.movieapp.ui.foryou.ForYouScreen
+import com.myth.movieapp.ui.person.PersonScreen
 import com.myth.movieapp.ui.search.SearchScreen
 import com.myth.movieapp.ui.settings.SettingsScreen
 import com.myth.movieapp.ui.watchlist.WatchlistScreen
@@ -74,6 +76,15 @@ data class DetailsRoute(
     val backdropPath: String? = null,
 )
 
+/** [sharedKey] identifies the tapped headshot, so it can morph into the person page header. */
+@Serializable
+data class PersonRoute(
+    val personId: Int,
+    val name: String = "",
+    val profilePath: String? = null,
+    val sharedKey: String? = null,
+)
+
 private data class TopLevel(
     val route: Any,
     val routeClass: KClass<*>,
@@ -96,7 +107,7 @@ fun MovieApp() {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val destination = backStack?.destination
-    val showBottomBar = destination?.hasRoute(DetailsRoute::class) != true
+    val showBottomBar = destination?.hasRoute(DetailsRoute::class) != true && destination?.hasRoute(PersonRoute::class) != true
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
@@ -136,6 +147,9 @@ fun MovieApp() {
             }
         },
     ) { padding ->
+        val openPerson: OpenPerson = { id, name, profilePath, key ->
+            navController.navigate(PersonRoute(id, name, profilePath, key))
+        }
         val openDetails: OpenTitle = { movie, key ->
             navController.navigate(DetailsRoute(movie.id, movie.mediaType, key, movie.title, movie.posterPath, movie.backdropPath))
         }
@@ -152,7 +166,7 @@ fun MovieApp() {
                         CompositionLocalProvider(LocalNavAnimatedScope provides this) { ForYouScreen(onMovieClick = openDetails) }
                     }
                     composable<SearchRoute> {
-                        CompositionLocalProvider(LocalNavAnimatedScope provides this) { SearchScreen(onMovieClick = openDetails, onPersonClick = { _, _, _, _ -> }) }
+                        CompositionLocalProvider(LocalNavAnimatedScope provides this) { SearchScreen(onMovieClick = openDetails, onPersonClick = openPerson) }
                     }
                     composable<WatchlistRoute> {
                         CompositionLocalProvider(LocalNavAnimatedScope provides this) { WatchlistScreen(onMovieClick = openDetails) }
@@ -160,7 +174,12 @@ fun MovieApp() {
                     composable<SettingsRoute> { SettingsScreen() }
                     composable<DetailsRoute> {
                         CompositionLocalProvider(LocalNavAnimatedScope provides this) {
-                            DetailsScreen(onBack = navController::popBackStack, onMovieClick = openDetails)
+                            DetailsScreen(onBack = navController::popBackStack, onMovieClick = openDetails, onPersonClick = openPerson)
+                        }
+                    }
+                    composable<PersonRoute> {
+                        CompositionLocalProvider(LocalNavAnimatedScope provides this) {
+                            PersonScreen(onBack = navController::popBackStack, onTitleClick = openDetails)
                         }
                     }
                 }

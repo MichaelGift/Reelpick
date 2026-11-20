@@ -77,6 +77,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.myth.movieapp.domain.model.CastMember
+import com.myth.movieapp.domain.model.CrewMember
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.model.TitleDetails
@@ -88,7 +89,10 @@ import com.myth.movieapp.ui.common.ErrorState
 import com.myth.movieapp.ui.common.GlassIconButton
 import com.myth.movieapp.ui.common.GradientButton
 import com.myth.movieapp.ui.common.TitleRow
+import com.myth.movieapp.ui.common.OpenPerson
 import com.myth.movieapp.ui.common.OpenTitle
+import com.myth.movieapp.ui.common.PersonAvatar
+import com.myth.movieapp.ui.common.personKey
 import com.myth.movieapp.ui.common.PosterImage
 import com.myth.movieapp.ui.common.RatingPill
 import com.myth.movieapp.ui.common.RowItem
@@ -103,13 +107,14 @@ import com.myth.movieapp.ui.theme.EyebrowStyle
 fun DetailsScreen(
     onBack: () -> Unit,
     onMovieClick: OpenTitle,
+    onPersonClick: OpenPerson,
     viewModel: DetailsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     val context = LocalContext.current
     // Once content scrolls under the status bar, back it with a scrim so it stays legible.
-    val scrimAlpha by animateFloatAsState(if (scrollState.value > 600) 0.96f else 0f, label = "statusScrim")
+    val scrimAlpha by animateFloatAsState(if (scrollState.value > 600) 1f else 0f, label = "statusScrim")
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         when (val content = state.content) {
@@ -123,6 +128,7 @@ fun DetailsScreen(
                 onFeedback = viewModel::toggleFeedback,
                 onToggleWatchlist = viewModel::toggleWatchlist,
                 onMovieClick = onMovieClick,
+                onPersonClick = onPersonClick,
             )
         }
         Row(
@@ -233,6 +239,7 @@ private fun DetailsBody(
     onFeedback: (FeedbackType) -> Unit,
     onToggleWatchlist: () -> Unit,
     onMovieClick: OpenTitle,
+    onPersonClick: OpenPerson,
 ) {
     val details = content.details
     val movie = details.title
@@ -292,7 +299,16 @@ private fun DetailsBody(
                 context.startActivity(Intent(Intent.ACTION_VIEW, link.toUri()))
             }
 
-            if (details.cast.isNotEmpty()) CastRow(details.cast)
+            val crew = details.tv?.creators ?: details.crew
+            if (crew.isNotEmpty()) {
+                CrewRow(
+                    title = if (details.tv != null) "Created by" else "Behind the camera",
+                    crew = crew,
+                    onPersonClick = onPersonClick,
+                )
+            }
+
+            if (details.cast.isNotEmpty()) CastRow(details.cast, onPersonClick)
 
             if (content.moreLikeThis.isNotEmpty()) {
                 TitleRow(
@@ -511,24 +527,21 @@ private fun ProviderGroup(title: String, providers: List<WatchProvider>) {
 }
 
 @Composable
-private fun CastRow(cast: List<CastMember>) {
+private fun CastRow(cast: List<CastMember>, onPersonClick: OpenPerson) {
     Column {
         SectionHeader("Cast")
         Spacer(Modifier.height(14.dp))
         LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             items(cast, key = { it.id }) { member ->
-                Column(Modifier.width(84.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.size(80.dp)) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Rounded.Person, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
-                            AsyncImage(
-                                model = TmdbImages.profile(member.profilePath),
-                                contentDescription = member.name,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                    }
+                val key = personKey("cast", member.id)
+                Column(
+                    Modifier
+                        .width(84.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onPersonClick(member.id, member.name, member.profilePath, key) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    PersonAvatar(member.profilePath, contentDescription = member.name, size = 80.dp, sharedKey = key)
                     Spacer(Modifier.height(8.dp))
                     Text(member.name, style = MaterialTheme.typography.labelLarge, maxLines = 2, textAlign = TextAlign.Center)
                     member.character?.let {
@@ -548,6 +561,39 @@ private fun CastRow(cast: List<CastMember>) {
                             color = MaterialTheme.colorScheme.primary,
                             textAlign = TextAlign.Center,
                         )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Directors and writers for a film, creators for a series: each opens their page. */
+@Composable
+private fun CrewRow(title: String, crew: List<CrewMember>, onPersonClick: OpenPerson) {
+    Column {
+        SectionHeader(title)
+        Spacer(Modifier.height(12.dp))
+        LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            items(crew, key = { it.id }) { member ->
+                val key = personKey("crew", member.id)
+                Surface(
+                    onClick = { onPersonClick(member.id, member.name, member.profilePath, key) },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ) {
+                    Row(Modifier.padding(start = 6.dp, end = 16.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        PersonAvatar(member.profilePath, contentDescription = null, size = 40.dp, sharedKey = key)
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text(member.name, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+                            Text(
+                                member.job,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
             }
