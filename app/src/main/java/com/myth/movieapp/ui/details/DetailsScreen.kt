@@ -80,6 +80,7 @@ import com.myth.movieapp.domain.model.CastMember
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.model.TitleDetails
+import com.myth.movieapp.domain.model.TvInfo
 import com.myth.movieapp.domain.model.WatchProvider
 import com.myth.movieapp.domain.model.WatchProviders
 import com.myth.movieapp.ui.common.Card
@@ -244,13 +245,18 @@ private fun DetailsBody(
             scrollState = scrollState,
         ) {
             Text(
-                listOfNotNull(movie.releaseYear, details.runtimeMinutes?.let(::formatRuntime)).joinToString("  ·  "),
+                details.tv?.let(::seriesMeta)
+                    ?: listOfNotNull(movie.releaseYear, details.runtimeMinutes?.let(::formatRuntime)).joinToString("  ·  "),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (movie.voteCount > 0) {
                 Spacer(Modifier.height(6.dp))
                 RatingPill(movie.voteAverage, votes = movie.voteCount)
+            }
+            details.tv?.let { tv ->
+                Spacer(Modifier.height(8.dp))
+                SeriesStatus(tv)
             }
         }
 
@@ -279,6 +285,8 @@ private fun DetailsBody(
             }
 
             Synopsis(details, Modifier.padding(horizontal = 20.dp))
+
+            details.tv?.takeIf { it.seasons.isNotEmpty() }?.let { SeasonsRow(it, fallbackPoster = movie.posterPath) }
 
             WhereToWatch(details.watchProviders, content.region, Modifier.padding(horizontal = 20.dp)) { link ->
                 context.startActivity(Intent(Intent.ACTION_VIEW, link.toUri()))
@@ -533,6 +541,14 @@ private fun CastRow(cast: List<CastMember>) {
                             textAlign = TextAlign.Center,
                         )
                     }
+                    member.episodeCount?.let {
+                        Text(
+                            plural(it, "episode"),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
             }
         }
@@ -542,5 +558,74 @@ private fun CastRow(cast: List<CastMember>) {
 /** "A", "A and B", "A, B and C". */
 private fun List<String>.naturalJoin(): String =
     if (size <= 2) joinToString(" and ") else dropLast(1).joinToString(", ") + " and " + last()
+
+/** "2011–2019 · 8 seasons · 73 episodes", or "2019– · ..." while still running. */
+private fun seriesMeta(tv: TvInfo): String = listOfNotNull(
+    tv.firstAirYear?.let { first ->
+        when {
+            tv.inProduction -> "$first–"
+            tv.lastAirYear == null || tv.lastAirYear == first -> first
+            else -> "$first–${tv.lastAirYear}"
+        }
+    },
+    plural(tv.seasonCount, "season").takeIf { tv.seasonCount > 0 },
+    plural(tv.episodeCount, "episode").takeIf { tv.episodeCount > 0 },
+).joinToString("  ·  ")
+
+private fun plural(count: Int, noun: String) = "$count ${if (count == 1) noun else noun + "s"}"
+
+/** Status pill ("Returning series" / "Ended") plus the networks it airs on. */
+@Composable
+private fun SeriesStatus(tv: TvInfo) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        tv.status?.let { status ->
+            val returning = tv.inProduction || status.startsWith("Returning", ignoreCase = true)
+            Surface(
+                shape = CircleShape,
+                color = if (returning) Brand.tokens.match.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceContainerHighest,
+            ) {
+                Text(
+                    if (returning) "Returning series" else status,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (returning) Brand.tokens.match else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+        }
+        if (tv.networks.isNotEmpty()) {
+            Text(
+                tv.networks.joinToString(" · ") { it.name },
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SeasonsRow(tv: TvInfo, fallbackPoster: String?) {
+    Column {
+        SectionHeader("Seasons", subtitle = listOf(plural(tv.seasonCount, "season"), plural(tv.episodeCount, "episode")).joinToString("  ·  "))
+        Spacer(Modifier.height(14.dp))
+        LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            items(tv.seasons, key = { it.number }) { season ->
+                Column(Modifier.width(112.dp)) {
+                    PosterImage(season.posterPath ?: fallbackPoster, contentDescription = season.name)
+                    Spacer(Modifier.height(8.dp))
+                    Text(season.name, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        listOfNotNull(plural(season.episodeCount, "episode"), season.airDate?.take(4)).joinToString("  ·  "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+            }
+        }
+    }
+}
 
 private fun formatRuntime(minutes: Int): String = if (minutes >= 60) "${minutes / 60}h ${minutes % 60}m" else "${minutes}m"

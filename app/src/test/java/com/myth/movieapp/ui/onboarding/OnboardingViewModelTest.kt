@@ -78,7 +78,7 @@ class OnboardingViewModelTest {
         vm.continueToMovies()
         advanceUntilIdle()
 
-        val picks = vm.state.value.movies.take(5).map { it.id }
+        val picks = vm.state.value.movies.take(5).map { it.key }
         picks.take(4).forEach(vm::toggleLike)
         assertFalse(vm.state.value.canFinish)
         vm.toggleLike(picks[4])
@@ -86,7 +86,7 @@ class OnboardingViewModelTest {
         advanceUntilIdle()
 
         val saved = feedback.feedback.first()
-        assertEquals(picks.toSet(), saved.map { it.movie.id }.toSet())
+        assertEquals(picks.toSet(), saved.map { it.movie.key }.toSet())
         assertTrue(saved.all { it.type == FeedbackType.LIKE })
         val p = prefs.preferences.first()
         assertTrue(p.onboardingComplete)

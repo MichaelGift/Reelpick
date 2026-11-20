@@ -3,6 +3,7 @@ package com.myth.movieapp.ui.foryou
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -36,6 +37,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -52,6 +54,10 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -59,6 +65,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.myth.movieapp.domain.model.FeedScope
+import com.myth.movieapp.domain.model.MediaType
 import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.domain.recommend.ForYouFeed
@@ -132,7 +140,7 @@ fun ForYouScreen(
                 )
             }
         }
-        TopBar(listState)
+        TopBar(listState, scope = state.scope, onScope = viewModel::setScope)
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
     }
 
@@ -148,7 +156,7 @@ fun ForYouScreen(
 
 /** Transparent over the hero, fading to a solid bar once the hero scrolls away. */
 @Composable
-private fun TopBar(listState: LazyListState) {
+private fun TopBar(listState: LazyListState, scope: FeedScope, onScope: (FeedScope) -> Unit) {
     val solid by remember {
         derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 600 }
     }
@@ -156,9 +164,55 @@ private fun TopBar(listState: LazyListState) {
         if (solid) MaterialTheme.colorScheme.background else Color.Transparent,
         label = "topBar",
     )
-    Box(Modifier.fillMaxWidth().background(background).statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp)) {
+    Column(Modifier.fillMaxWidth().background(background).statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp)) {
         Wordmark(markSize = 26.dp, color = if (solid) MaterialTheme.colorScheme.onBackground else Color.White)
+        Spacer(Modifier.height(12.dp))
+        ScopeSwitch(scope, onScope, overArtwork = !solid)
     }
+}
+
+/** All / Movies / Series. Over the hero it uses fixed light-on-dark colours to stay readable. */
+@Composable
+private fun ScopeSwitch(selected: FeedScope, onSelect: (FeedScope) -> Unit, overArtwork: Boolean) {
+    val haptics = LocalHapticFeedback.current
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FeedScope.entries.forEach { scope ->
+            val isSelected = scope == selected
+            val container = when {
+                isSelected -> if (overArtwork) Color.White else MaterialTheme.colorScheme.onBackground
+                overArtwork -> Color.Black.copy(alpha = 0.35f)
+                else -> MaterialTheme.colorScheme.surfaceContainerHigh
+            }
+            val content = when {
+                isSelected -> if (overArtwork) Color.Black else MaterialTheme.colorScheme.background
+                overArtwork -> Color.White
+                else -> MaterialTheme.colorScheme.onSurface
+            }
+            Surface(
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onSelect(scope)
+                },
+                shape = CircleShape,
+                color = container,
+                contentColor = content,
+                border = if (isSelected) null else BorderStroke(1.dp, content.copy(alpha = 0.25f)),
+                modifier = Modifier.semantics { this.selected = isSelected },
+            ) {
+                Text(
+                    scope.label(),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+                )
+            }
+        }
+    }
+}
+
+private fun FeedScope.label() = when (this) {
+    FeedScope.ALL -> "All"
+    FeedScope.MOVIES -> "Movies"
+    FeedScope.TV -> "Series"
 }
 
 @Composable
@@ -342,6 +396,7 @@ private fun HeroCopy(
         Spacer(Modifier.height(8.dp))
         Text(
             listOfNotNull(
+                "Series".takeIf { movie.mediaType == MediaType.TV },
                 movie.releaseYear,
                 movie.genreIds.mapNotNull { genreNames[it] }.take(2).joinToString(", ").ifEmpty { null },
                 movie.ratingLabel(),

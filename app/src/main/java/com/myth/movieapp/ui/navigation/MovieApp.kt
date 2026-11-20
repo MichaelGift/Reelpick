@@ -43,6 +43,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.myth.movieapp.domain.model.MediaType
 import com.myth.movieapp.ui.common.LocalNavAnimatedScope
 import com.myth.movieapp.ui.common.LocalSharedTransitionScope
 import com.myth.movieapp.ui.common.OpenTitle
@@ -65,7 +66,8 @@ import kotlin.reflect.KClass
  */
 @Serializable
 data class DetailsRoute(
-    val movieId: Int,
+    val titleId: Int,
+    val mediaType: MediaType = MediaType.MOVIE,
     val sharedKey: String? = null,
     val title: String = "",
     val posterPath: String? = null,
@@ -135,7 +137,7 @@ fun MovieApp() {
         },
     ) { padding ->
         val openDetails: OpenTitle = { movie, key ->
-            navController.navigate(DetailsRoute(movie.id, key, movie.title, movie.posterPath, movie.backdropPath))
+            navController.navigate(DetailsRoute(movie.id, movie.mediaType, key, movie.title, movie.posterPath, movie.backdropPath))
         }
         SharedTransitionLayout {
             CompositionLocalProvider(LocalSharedTransitionScope provides this) {
@@ -150,7 +152,7 @@ fun MovieApp() {
                         CompositionLocalProvider(LocalNavAnimatedScope provides this) { ForYouScreen(onMovieClick = openDetails) }
                     }
                     composable<SearchRoute> {
-                        CompositionLocalProvider(LocalNavAnimatedScope provides this) { SearchScreen(onMovieClick = openDetails) }
+                        CompositionLocalProvider(LocalNavAnimatedScope provides this) { SearchScreen(onMovieClick = openDetails, onPersonClick = { _, _, _, _ -> }) }
                     }
                     composable<WatchlistRoute> {
                         CompositionLocalProvider(LocalNavAnimatedScope provides this) { WatchlistScreen(onMovieClick = openDetails) }

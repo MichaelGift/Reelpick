@@ -46,6 +46,7 @@ import com.myth.movieapp.ui.common.MessageState
 import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.common.PosterCard
 import com.myth.movieapp.ui.common.posterKey
+import com.myth.movieapp.ui.common.stableKey
 import com.myth.movieapp.ui.theme.EyebrowStyle
 import kotlinx.coroutines.launch
 
@@ -90,8 +91,8 @@ fun WatchlistScreen(onMovieClick: OpenTitle, viewModel: WatchlistViewModel = hil
                         )
                     }
                 }
-                items(list, key = { it.id }) { movie ->
-                    val key = posterKey("watchlist", movie.id)
+                items(list, key = { it.stableKey }) { movie ->
+                    val key = posterKey("watchlist", movie)
                     PosterCard(
                         movie = movie,
                         width = 200.dp,

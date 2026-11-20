@@ -61,8 +61,7 @@ class DetailsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<DetailsRoute>()
-    // Movies only until the route carries a media type.
-    private val key = TitleKey(MediaType.MOVIE, route.movieId)
+    private val key = TitleKey(route.mediaType, route.titleId)
     /** Key of the poster that was tapped, so the details poster can morph out of it. */
     val sharedKey: String? = route.sharedKey
     val preview = DetailsPreview(route.title, route.posterPath, route.backdropPath)

@@ -86,7 +86,7 @@ class ScreenTests {
                 trailerYoutubeKey = null, watchProviders = null),
         )
         val viewModel = DetailsViewModel(
-            SavedStateHandle(mapOf("movieId" to 42, "title" to "Dune")), movies, feedback, watchlist, prefs,
+            SavedStateHandle(mapOf("titleId" to 42, "title" to "Dune")), movies, feedback, watchlist, prefs,
             tasteProfileUseCase(feedback, watchlist, prefs),
         )
         compose.setContent { MovieAppTheme { DetailsScreen(onBack = {}, onMovieClick = { _, _ -> }, viewModel = viewModel) } }
