@@ -663,7 +663,7 @@ private fun SeasonsRow(tv: TvInfo, fallbackPoster: String?) {
                     Spacer(Modifier.height(8.dp))
                     Text(season.name, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
-                        listOfNotNull(plural(season.episodeCount, "episode"), season.airDate?.take(4)).joinToString("  ·  "),
+                        listOfNotNull(if (season.episodeCount > 0) plural(season.episodeCount, "episode") else "Announced", season.airDate?.take(4)).joinToString("  ·  "),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,

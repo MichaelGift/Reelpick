@@ -24,3 +24,7 @@
 -keep,includedescriptorclasses class com.myth.movieapp.data.remote.dto.**$$serializer { *; }
 -keepclassmembers class com.myth.movieapp.data.remote.dto.** { *** Companion; }
 -keepclasseswithmembers class com.myth.movieapp.data.remote.dto.** { kotlinx.serialization.KSerializer serializer(...); }
+
+# Navigation resolves enum route arguments by class name (Class.forName), so
+# any enum used in a route must keep its name, e.g. DetailsRoute.mediaType.
+-keepnames enum com.myth.movieapp.domain.model.MediaType
