@@ -2,7 +2,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -24,15 +23,15 @@ val releaseKeystore: String? = System.getenv("KEYSTORE_PATH")?.takeIf { it.isNot
 
 android {
     namespace = "com.myth.movieapp"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.myth.movieapp"
         minSdk = 26
         targetSdk = 36
         // CI passes -PversionCode / -PversionName derived from the release tag.
-        versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 2
-        versionName = (findProperty("versionName") as String?) ?: "2.0"
+        versionCode = providers.gradleProperty("versionCode").map(String::toInt).getOrElse(2)
+        versionName = providers.gradleProperty("versionName").getOrElse("2.0")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "TMDB_ACCESS_TOKEN", "\"$tmdbToken\"")
@@ -61,17 +60,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
     }
     // In-memory fakes shared by JVM unit tests and instrumented UI tests.
     sourceSets {
-        getByName("test").java.srcDir("src/sharedTest/java")
-        getByName("androidTest").java.srcDir("src/sharedTest/java")
+        getByName("test").kotlin.directories.add("src/sharedTest/java")
+        getByName("androidTest").kotlin.directories.add("src/sharedTest/java")
     }
 }
 

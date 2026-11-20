@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -54,12 +55,15 @@ private val REGIONS = listOf(
     "US", "GB", "CA", "AU", "IE", "IN", "KE", "NG", "ZA", "DE", "FR", "ES", "IT", "NL", "BR", "MX", "JP", "KR",
 )
 
-private fun regionName(code: String) = Locale("", code).getDisplayCountry(Locale.getDefault())
+/** Country name for an ISO code, in [displayLocale] (the UI locale, so it follows language changes). */
+private fun regionName(code: String, displayLocale: Locale) =
+    Locale.Builder().setRegion(code).build().getDisplayCountry(displayLocale)
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val prefs by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
     var dialog by remember { mutableStateOf<SettingsDialog?>(null) }
 
     Column(
@@ -77,7 +81,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             SettingRow(
                 icon = Icons.Outlined.Public,
                 title = "Streaming region",
-                value = prefs.region?.let(::regionName) ?: "Automatic (${regionName(Locale.getDefault().country)})",
+                value = prefs.region?.let { regionName(it, locale) } ?: "Automatic (${regionName(locale.country, locale)})",
                 onClick = { dialog = SettingsDialog.Region },
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -127,7 +131,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             title = "Streaming region",
             options = listOf<String?>(null) + REGIONS,
             selected = prefs.region,
-            label = { it?.let(::regionName) ?: "Automatic" },
+            label = { code -> code?.let { regionName(it, locale) } ?: "Automatic" },
             onSelect = { viewModel.setRegion(it); dialog = null },
             onDismiss = { dialog = null },
         )
