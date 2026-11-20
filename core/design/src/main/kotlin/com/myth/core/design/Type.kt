@@ -1,4 +1,4 @@
-package com.myth.movieapp.ui.theme
+package com.myth.core.design
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.ExperimentalTextApi
@@ -9,7 +9,7 @@ import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import com.myth.movieapp.R
+import com.myth.core.design.R
 
 // Both families ship as variable fonts; each weight is an instance of the same file.
 

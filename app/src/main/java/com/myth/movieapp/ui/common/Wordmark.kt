@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.myth.movieapp.R
-import com.myth.movieapp.ui.theme.Brand
+import com.myth.core.design.Brand
 import androidx.compose.ui.res.stringResource
 
 /** App mark (gradient tile with a play glyph) plus the name set in the display face. */

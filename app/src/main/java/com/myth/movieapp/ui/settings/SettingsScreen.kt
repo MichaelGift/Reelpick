@@ -46,9 +46,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myth.movieapp.BuildConfig
 import com.myth.movieapp.domain.model.ThemeMode
-import com.myth.movieapp.ui.common.Card
+import com.myth.core.design.Card
 import com.myth.movieapp.ui.common.Wordmark
-import com.myth.movieapp.ui.theme.EyebrowStyle
+import com.myth.core.design.EyebrowStyle
 import java.util.Locale
 
 private val REGIONS = listOf(

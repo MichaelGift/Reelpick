@@ -84,24 +84,24 @@ import com.myth.movieapp.domain.model.TitleDetails
 import com.myth.movieapp.domain.model.TvInfo
 import com.myth.movieapp.domain.model.WatchProvider
 import com.myth.movieapp.domain.model.WatchProviders
-import com.myth.movieapp.ui.common.Card
+import com.myth.core.design.Card
 import com.myth.movieapp.ui.common.ErrorState
-import com.myth.movieapp.ui.common.GlassIconButton
-import com.myth.movieapp.ui.common.GradientButton
+import com.myth.core.design.GlassIconButton
+import com.myth.core.design.GradientButton
 import com.myth.movieapp.ui.common.TitleRow
 import com.myth.movieapp.ui.common.OpenPerson
 import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.common.PersonAvatar
 import com.myth.movieapp.ui.common.personKey
 import com.myth.movieapp.ui.common.PosterImage
-import com.myth.movieapp.ui.common.RatingPill
+import com.myth.core.design.RatingPill
 import com.myth.movieapp.ui.common.RowItem
-import com.myth.movieapp.ui.common.SectionHeader
-import com.myth.movieapp.ui.common.ShimmerBox
+import com.myth.core.design.SectionHeader
+import com.myth.core.design.ShimmerBox
 import com.myth.movieapp.ui.common.TmdbImages
-import com.myth.movieapp.ui.common.TonalPillButton
-import com.myth.movieapp.ui.theme.Brand
-import com.myth.movieapp.ui.theme.EyebrowStyle
+import com.myth.core.design.TonalPillButton
+import com.myth.core.design.Brand
+import com.myth.core.design.EyebrowStyle
 
 @Composable
 fun DetailsScreen(
@@ -435,7 +435,7 @@ private fun Synopsis(details: TitleDetails, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
     Column(modifier.animateContentSize()) {
         details.tagline?.let {
-            Text("“$it”", style = MaterialTheme.typography.titleLarge.copy(fontFamily = com.myth.movieapp.ui.theme.Fraunces))
+            Text("“$it”", style = MaterialTheme.typography.titleLarge.copy(fontFamily = com.myth.core.design.Fraunces))
             Spacer(Modifier.height(10.dp))
         }
         Text(

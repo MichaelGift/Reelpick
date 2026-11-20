@@ -72,26 +72,26 @@ import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.recommend.Recommendation
 import com.myth.movieapp.domain.recommend.TasteSummary
-import com.myth.movieapp.ui.common.Card
+import com.myth.core.design.Card
 import com.myth.movieapp.ui.common.ErrorState
-import com.myth.movieapp.ui.common.GradientButton
-import com.myth.movieapp.ui.common.LoadingFeed
-import com.myth.movieapp.ui.common.MIN_DISPLAY_MATCH
-import com.myth.movieapp.ui.common.MatchBadge
-import com.myth.movieapp.ui.common.MessageState
+import com.myth.core.design.GradientButton
+import com.myth.core.design.LoadingFeed
+import com.myth.core.design.MIN_DISPLAY_MATCH
+import com.myth.core.design.MatchBadge
+import com.myth.core.design.MessageState
 import com.myth.movieapp.ui.common.TitleActionsSheet
 import com.myth.movieapp.ui.common.TitleRow
 import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.common.RankedRow
-import com.myth.movieapp.ui.common.ReasonPill
+import com.myth.core.design.ReasonPill
 import com.myth.movieapp.ui.common.RowItem
 import com.myth.movieapp.ui.common.TmdbImages
-import com.myth.movieapp.ui.common.TonalPillButton
+import com.myth.core.design.TonalPillButton
 import com.myth.movieapp.ui.common.Wordmark
 import com.myth.movieapp.ui.common.label
 import com.myth.movieapp.ui.common.ratingLabel
-import com.myth.movieapp.ui.theme.Brand
-import com.myth.movieapp.ui.theme.EyebrowStyle
+import com.myth.core.design.Brand
+import com.myth.core.design.EyebrowStyle
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)

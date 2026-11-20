@@ -42,12 +42,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myth.movieapp.domain.model.Title
-import com.myth.movieapp.ui.common.MessageState
+import com.myth.core.design.MessageState
 import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.common.PosterCard
 import com.myth.movieapp.ui.common.posterKey
 import com.myth.movieapp.ui.common.stableKey
-import com.myth.movieapp.ui.theme.EyebrowStyle
+import com.myth.core.design.EyebrowStyle
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

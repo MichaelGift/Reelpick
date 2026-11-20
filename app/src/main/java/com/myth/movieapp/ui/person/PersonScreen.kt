@@ -54,20 +54,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myth.movieapp.domain.model.MediaType
 import com.myth.movieapp.domain.model.Person
 import com.myth.movieapp.ui.common.ErrorState
-import com.myth.movieapp.ui.common.GlassIconButton
-import com.myth.movieapp.ui.common.MIN_DISPLAY_MATCH
-import com.myth.movieapp.ui.common.MatchBadge
+import com.myth.core.design.GlassIconButton
+import com.myth.core.design.MIN_DISPLAY_MATCH
+import com.myth.core.design.MatchBadge
 import com.myth.movieapp.ui.common.OpenTitle
 import com.myth.movieapp.ui.common.PersonAvatar
 import com.myth.movieapp.ui.common.PosterImage
 import com.myth.movieapp.ui.common.RowItem
-import com.myth.movieapp.ui.common.SectionHeader
+import com.myth.core.design.SectionHeader
 import com.myth.movieapp.ui.common.SeriesBadge
-import com.myth.movieapp.ui.common.ShimmerBox
+import com.myth.core.design.ShimmerBox
 import com.myth.movieapp.ui.common.TitleRow
 import com.myth.movieapp.ui.common.stableKey
-import com.myth.movieapp.ui.theme.Brand
-import com.myth.movieapp.ui.theme.EyebrowStyle
+import com.myth.core.design.Brand
+import com.myth.core.design.EyebrowStyle
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
