@@ -48,7 +48,9 @@ import com.myth.core.design.LocalNavAnimatedScope
 import com.myth.core.design.LocalSharedTransitionScope
 import com.myth.core.design.MessageState
 import com.myth.playpick.ui.common.OpenGame
+import com.myth.playpick.ui.checklist.ChecklistScreen
 import com.myth.playpick.ui.details.GameDetailsScreen
+import com.myth.playpick.ui.library.LibraryScreen
 import com.myth.playpick.ui.foryou.ForYouScreen
 import com.myth.playpick.ui.search.SearchScreen
 import kotlinx.serialization.Serializable
@@ -142,7 +144,11 @@ fun PlaypickApp() {
                     composable<SearchRoute> {
                         CompositionLocalProvider(LocalNavAnimatedScope provides this) { SearchScreen(onOpen = openGame) }
                     }
-                    composable<LibraryRoute> { Placeholder("Library") }
+                    composable<LibraryRoute> {
+                        CompositionLocalProvider(LocalNavAnimatedScope provides this) {
+                            LibraryScreen(onOpen = openGame, onChecklist = { id, name -> navController.navigate(ChecklistRoute(id, name)) })
+                        }
+                    }
                     composable<SettingsRoute> { Placeholder("Settings") }
                     composable<GameRoute> {
                         CompositionLocalProvider(LocalNavAnimatedScope provides this) {
@@ -153,7 +159,7 @@ fun PlaypickApp() {
                             )
                         }
                     }
-                    composable<ChecklistRoute> { Placeholder("Checklist") }
+                    composable<ChecklistRoute> { ChecklistScreen(onBack = navController::popBackStack) }
                 }
             }
         }
