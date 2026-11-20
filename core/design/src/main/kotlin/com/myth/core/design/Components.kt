@@ -193,7 +193,7 @@ fun GradientButton(
     Box(
         modifier = modifier
             .height(54.dp)
-            .clip(CircleShape)
+            .clip(brand.controlShape)
             .background(if (enabled) brand.gradient else Brush.linearGradient(List(2) { MaterialTheme.colorScheme.surfaceContainerHighest }))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 24.dp),
@@ -201,13 +201,13 @@ fun GradientButton(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {
-                Icon(icon, contentDescription = null, tint = if (enabled) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(icon, contentDescription = null, tint = if (enabled) brand.onGradient else MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.width(8.dp))
             }
             Text(
                 text,
                 style = MaterialTheme.typography.titleSmall,
-                color = if (enabled) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (enabled) brand.onGradient else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -225,7 +225,7 @@ fun TonalPillButton(
     Surface(
         onClick = onClick,
         modifier = modifier.height(54.dp),
-        shape = CircleShape,
+        shape = Brand.tokens.controlShape,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
     ) {
         Row(Modifier.padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
@@ -244,7 +244,7 @@ fun GlassIconButton(icon: ImageVector, contentDescription: String, onClick: () -
     Surface(
         onClick = onClick,
         modifier = modifier.size(44.dp),
-        shape = CircleShape,
+        shape = Brand.tokens.controlShape,
         color = Color.Black.copy(alpha = 0.42f),
         contentColor = Color.White,
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),

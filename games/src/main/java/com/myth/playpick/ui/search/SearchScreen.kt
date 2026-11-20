@@ -54,7 +54,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.myth.core.design.EyebrowStyle
+import com.myth.playpick.ui.theme.HudLabel
 import com.myth.core.design.MessageState
 import com.myth.core.design.ShimmerBox
 import com.myth.playpick.domain.model.Named
@@ -63,13 +63,15 @@ import com.myth.playpick.ui.common.GameCard
 import com.myth.playpick.ui.common.OpenGame
 import com.myth.playpick.ui.common.RawgAttribution
 import com.myth.playpick.ui.common.gameKey
+import com.myth.playpick.ui.navigation.FloatingBarClearance
+import com.myth.playpick.ui.theme.Hud
 
 @Composable
 fun SearchScreen(onOpen: OpenGame, viewModel: SearchViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val focus = LocalFocusManager.current
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
-        Text("Search", style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 14.dp))
+        Text("Search", style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 14.dp))
         TextField(
             value = state.query,
             onValueChange = viewModel::onQueryChange,
@@ -81,16 +83,16 @@ fun SearchScreen(onOpen: OpenGame, viewModel: SearchViewModel = hiltViewModel())
                 }
             },
             singleLine = true,
-            shape = CircleShape,
+            shape = Hud.ControlShape,
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
             ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { viewModel.submit(); focus.clearFocus() }),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         )
         Spacer(Modifier.height(16.dp))
         val showingResults = state.searched || state.isLoading || state.browsing != null
@@ -109,7 +111,7 @@ fun SearchScreen(onOpen: OpenGame, viewModel: SearchViewModel = hiltViewModel())
 private fun Home(state: SearchUiState, onRecent: (String) -> Unit, onClearRecent: () -> Unit, onBrowse: (Named) -> Unit) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = FloatingBarClearance),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -117,7 +119,7 @@ private fun Home(state: SearchUiState, onRecent: (String) -> Unit, onClearRecent
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("RECENT", style = EyebrowStyle, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                        Text("RECENT", style = HudLabel, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
                         TextButton(onClick = onClearRecent) { Text("Clear") }
                     }
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -136,7 +138,7 @@ private fun Home(state: SearchUiState, onRecent: (String) -> Unit, onClearRecent
         }
         if (state.genres.isNotEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                Text("BROWSE BY GENRE", style = EyebrowStyle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("BROWSE BY GENRE", style = HudLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             items(state.genres, key = { it.id }) { genre -> GenreTile(genre) { onBrowse(genre) } }
         }
@@ -174,13 +176,13 @@ private fun Results(state: SearchUiState, onOpen: OpenGame, onLoadMore: () -> Un
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         state = grid,
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = FloatingBarClearance),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         state.browsing?.let { genre ->
             item(span = { GridItemSpan(maxLineSpan) }) {
-                Text("POPULAR IN ${genre.name.uppercase()} ON YOUR PLATFORMS", style = EyebrowStyle, color = MaterialTheme.colorScheme.primary)
+                Text("POPULAR IN ${genre.name.uppercase()} ON YOUR PLATFORMS", style = HudLabel, color = MaterialTheme.colorScheme.primary)
             }
         }
         items(state.results, key = { it.id }) { game ->

@@ -2,8 +2,10 @@ package com.myth.playpick.ui.checklist
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,9 +48,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -59,21 +63,32 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myth.core.design.Brand
-import com.myth.core.design.EyebrowStyle
 import com.myth.core.design.MessageState
 import com.myth.core.design.ShimmerBox
 import com.myth.playpick.domain.model.ChecklistItem
 import com.myth.playpick.domain.model.Progress
+import com.myth.playpick.domain.model.Rarity
 import com.myth.playpick.ui.common.AchievementIcon
-import com.myth.playpick.ui.common.RarityBadge
+import com.myth.playpick.ui.common.HudPill
 import com.myth.playpick.ui.common.RawgAttribution
+import com.myth.playpick.ui.common.SegmentedBar
+import com.myth.playpick.ui.common.color
+import com.myth.playpick.ui.common.label
+import com.myth.playpick.ui.common.percentLabel
+import com.myth.playpick.ui.theme.Hud
+import com.myth.playpick.ui.theme.HudLabel
+import com.myth.playpick.ui.theme.HudStat
 
 @Composable
 fun ChecklistScreen(onBack: () -> Unit, viewModel: ChecklistViewModel = hiltViewModel()) {
@@ -82,15 +97,15 @@ fun ChecklistScreen(onBack: () -> Unit, viewModel: ChecklistViewModel = hiltView
     val haptics = LocalHapticFeedback.current
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
-        Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back") }
-            Text(
-                state.entry?.game?.name ?: viewModel.name,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
+        Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(onClick = onBack, shape = Hud.ControlShape, color = MaterialTheme.colorScheme.surfaceContainer, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), modifier = Modifier.size(44.dp)) {
+                Box(contentAlignment = Alignment.Center) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back") }
+            }
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text("CHECKLIST", style = HudLabel.copy(fontSize = 10.sp), color = Hud.Label)
+                Text(state.entry?.game?.name ?: viewModel.name, style = MaterialTheme.typography.headlineSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             IconButton(onClick = viewModel::refresh, enabled = !state.isSyncing) { Icon(Icons.Rounded.Refresh, contentDescription = "Refresh the list") }
         }
         when {
@@ -102,11 +117,11 @@ fun ChecklistScreen(onBack: () -> Unit, viewModel: ChecklistViewModel = hiltView
                 "RAWG has no achievement list for this game. You can still track it in your library.",
             )
             else -> LazyColumn(contentPadding = PaddingValues(bottom = 24.dp), modifier = Modifier.navigationBarsPadding()) {
-                item(key = "header") { Header(checklist.progress, state.entry?.game?.playtimeHours ?: 0) }
+                item(key = "header") { ProgressCard(checklist.progress, checklist.items) }
                 item(key = "controls") { Controls(state.controls, viewModel::setFilter, viewModel::setSort, viewModel::setQuery) }
                 if (state.visible.isEmpty()) {
                     item(key = "none") {
-                        Text("Nothing here.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(20.dp))
+                        Text("Nothing here.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
                     }
                 }
                 items(state.visible, key = { it.achievement.id }) { item ->
@@ -123,7 +138,7 @@ fun ChecklistScreen(onBack: () -> Unit, viewModel: ChecklistViewModel = hiltView
     if (state.offerMastered) {
         AlertDialog(
             onDismissRequest = viewModel::dismissMastered,
-            icon = { Icon(Icons.Rounded.WorkspacePremium, contentDescription = null, tint = Brand.tokens.rating) },
+            icon = { Icon(Icons.Rounded.WorkspacePremium, contentDescription = null, tint = Hud.Gold) },
             title = { Text("Every achievement unlocked") },
             text = { Text("Mark ${state.entry?.game?.name ?: "this game"} as 100%? It's the strongest signal for your recommendations.") },
             confirmButton = { TextButton(onClick = viewModel::markMastered) { Text("Mark 100%") } },
@@ -132,47 +147,68 @@ fun ChecklistScreen(onBack: () -> Unit, viewModel: ChecklistViewModel = hiltView
     }
 }
 
+/** The big count, the XP bar and what's left at the top rarities. */
 @Composable
-private fun Header(progress: Progress, playtimeHours: Int) {
-    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-        ProgressRing(progress, size = 96.dp)
-        Spacer(Modifier.width(20.dp))
-        Column {
-            Text("COMPLETION", style = EyebrowStyle, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(4.dp))
-            Text("${progress.unlocked} / ${progress.total}", style = MaterialTheme.typography.headlineMedium)
+private fun ProgressCard(progress: Progress, items: List<ChecklistItem>) {
+    val complete = progress.isComplete
+    val accent = if (complete) Hud.Gold else MaterialTheme.colorScheme.primary
+    val left = { r: Rarity -> items.count { !it.unlocked && it.achievement.rarity == r } }
+    Column(
+        Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth().clip(Hud.CardShape)
+            .background(MaterialTheme.colorScheme.surfaceContainer).border(1.dp, MaterialTheme.colorScheme.outlineVariant, Hud.CardShape).padding(16.dp)
+            .semantics(mergeDescendants = true) { contentDescription = "${progress.unlocked} of ${progress.total} achievements unlocked" },
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.Bottom) {
             Text(
-                when {
-                    progress.isComplete -> "All done. Legendary."
-                    playtimeHours > 0 -> "${progress.total - progress.unlocked} to go · about $playtimeHours h to beat"
-                    else -> "${progress.total - progress.unlocked} to go"
+                buildAnnotatedString {
+                    withStyle(SpanStyle(color = accent, fontSize = 44.sp)) { append("${progress.unlocked}") }
+                    withStyle(SpanStyle(color = Hud.Label, fontSize = 20.sp)) { append(" / ${progress.total}") }
                 },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = HudStat.copy(lineHeight = 44.sp),
+                modifier = Modifier.weight(1f),
             )
+            Column(horizontalAlignment = Alignment.End) {
+                Text("${(progress.fraction * 100).toInt()}%", style = HudStat.copy(fontSize = 20.sp))
+                Text(if (complete) "LEGENDARY" else "COMPLETE", style = HudLabel.copy(fontSize = 10.sp), color = Hud.Label)
+            }
+        }
+        SegmentedBar(progress.fraction, segments = 24, height = 10.dp, color = accent)
+        val ultra = left(Rarity.ULTRA_RARE)
+        val rare = left(Rarity.RARE)
+        if (ultra + rare > 0) {
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                RarityLeft(Rarity.ULTRA_RARE, ultra)
+                RarityLeft(Rarity.RARE, rare)
+            }
         }
     }
 }
 
-/** An animated ring on the brand gradient, with the percentage in the middle. */
+@Composable
+private fun RarityLeft(rarity: Rarity, count: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(7.dp).background(rarity.color, CircleShape))
+        Spacer(Modifier.width(6.dp))
+        Text("$count ${rarity.label.lowercase()} left", style = HudLabel.copy(letterSpacing = 0.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** A smaller progress ring, still used on library rows. */
 @Composable
 fun ProgressRing(progress: Progress, size: Dp, modifier: Modifier = Modifier, showLabel: Boolean = true) {
     val fraction by animateFloatAsState(progress.fraction, tween(600), label = "ring")
     val track = MaterialTheme.colorScheme.surfaceContainerHighest
-    val colors = Brand.tokens.gradientColors
+    val color = if (progress.isComplete) Hud.Gold else Brand.tokens.gradientColors.first()
     Box(modifier.size(size).semantics { contentDescription = "${(progress.fraction * 100).toInt()} percent complete" }, contentAlignment = Alignment.Center) {
         Canvas(Modifier.matchParentSize()) {
             val stroke = this.size.minDimension * 0.1f
             val inset = stroke / 2
             val arc = Size(this.size.width - stroke, this.size.height - stroke)
             drawArc(track, 0f, 360f, false, Offset(inset, inset), arc, style = Stroke(stroke))
-            drawArc(
-                androidx.compose.ui.graphics.Brush.sweepGradient(colors + colors.first()),
-                -90f, 360f * fraction, false, Offset(inset, inset), arc,
-                style = Stroke(stroke, cap = StrokeCap.Round),
-            )
+            drawArc(Brush.linearGradient(listOf(color, color)), -90f, 360f * fraction, false, Offset(inset, inset), arc, style = Stroke(stroke, cap = StrokeCap.Round))
         }
-        if (showLabel) Text("${(progress.fraction * 100).toInt()}%", style = if (size >= 80.dp) MaterialTheme.typography.titleLarge else MaterialTheme.typography.labelMedium)
+        if (showLabel) Text("${(progress.fraction * 100).toInt()}%", style = HudStat.copy(fontSize = if (size >= 80.dp) 20.sp else 11.sp))
     }
 }
 
@@ -183,7 +219,12 @@ private fun Controls(
     onSort: (ChecklistSort) -> Unit,
     onQuery: (String) -> Unit,
 ) {
-    Column(Modifier.padding(bottom = 8.dp)) {
+    Column(Modifier.padding(top = 6.dp, bottom = 6.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(ChecklistFilter.entries) { HudPill(it.label, controls.filter == it, { onFilter(it) }) }
+            item { Spacer(Modifier.width(10.dp)) }
+            items(ChecklistSort.entries) { HudPill(it.label, controls.sort == it, { onSort(it) }, mono = false) }
+        }
         TextField(
             value = controls.query,
             onValueChange = onQuery,
@@ -191,41 +232,15 @@ private fun Controls(
             leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
             trailingIcon = { if (controls.query.isNotEmpty()) IconButton(onClick = { onQuery("") }) { Icon(Icons.Rounded.Close, contentDescription = "Clear") } },
             singleLine = true,
-            shape = CircleShape,
+            shape = Hud.ControlShape,
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
             ),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         )
-        Spacer(Modifier.height(12.dp))
-        LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(ChecklistFilter.entries) { Pill(it.label, controls.filter == it) { onFilter(it) } }
-            item { Spacer(Modifier.width(8.dp)) }
-            items(ChecklistSort.entries) { Pill(it.label, controls.sort == it, subtle = true) { onSort(it) } }
-        }
-    }
-}
-
-@Composable
-private fun Pill(label: String, selected: Boolean, subtle: Boolean = false, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = CircleShape,
-        color = when {
-            selected && !subtle -> MaterialTheme.colorScheme.primary
-            selected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
-            else -> MaterialTheme.colorScheme.surfaceContainerHigh
-        },
-        contentColor = when {
-            selected && !subtle -> MaterialTheme.colorScheme.onPrimary
-            selected -> MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.onSurface
-        },
-    ) {
-        Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
     }
 }
 
@@ -235,54 +250,54 @@ private fun AchievementRow(item: ChecklistItem, onToggle: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .padding(horizontal = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
             .semantics(mergeDescendants = true) {
                 role = Role.Checkbox
                 stateDescription = if (item.unlocked) "Unlocked" else "Locked"
             }
             .clickable(onClick = onToggle)
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .padding(horizontal = 8.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AchievementIcon(a, item.unlocked)
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                a.name,
-                style = MaterialTheme.typography.titleSmall,
-                textDecoration = if (item.unlocked) TextDecoration.LineThrough else null,
-                color = if (item.unlocked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-            )
+        AchievementIcon(a, item.unlocked, size = 44.dp)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f).alpha(if (item.unlocked) 0.6f else 1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(a.name, style = MaterialTheme.typography.titleSmall, textDecoration = if (item.unlocked) TextDecoration.LineThrough else null)
             if (a.description.isNotBlank()) {
                 Text(a.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
-            if (a.rarity != null) {
-                Spacer(Modifier.height(6.dp))
-                RarityBadge(a)
+            a.rarity?.let { r ->
+                Text(
+                    listOfNotNull(r.label.uppercase(), a.percentLabel()).joinToString(" · "),
+                    style = HudStat.copy(fontSize = 10.sp, letterSpacing = 0.6.sp),
+                    color = r.color,
+                )
             }
         }
         Spacer(Modifier.width(12.dp))
-        CheckCircle(item.unlocked)
+        CheckBox(item.unlocked)
     }
 }
 
+/** A square HUD checkbox: an outline when locked, an accent tile with a tick when unlocked. */
 @Composable
-private fun CheckCircle(checked: Boolean) {
-    val shape = CircleShape
+private fun CheckBox(checked: Boolean) {
+    val shape = RoundedCornerShape(7.dp)
     Box(
-        Modifier.size(30.dp).clip(shape).then(
-            if (checked) Modifier.background(Brand.tokens.gradient) else Modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest),
-        ),
+        Modifier.size(26.dp).clip(shape)
+            .background(if (checked) MaterialTheme.colorScheme.primary else Color.Transparent)
+            .border(2.dp, if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, shape),
         contentAlignment = Alignment.Center,
     ) {
-        if (checked) Icon(Icons.Rounded.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+        if (checked) Icon(Icons.Rounded.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
     }
 }
 
 @Composable
 private fun Loading() {
-    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        ShimmerBox(Modifier.size(96.dp), CircleShape)
-        repeat(6) { ShimmerBox(Modifier.fillMaxWidth().height(56.dp), RoundedCornerShape(14.dp)) }
+    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        ShimmerBox(Modifier.fillMaxWidth().height(130.dp), RoundedCornerShape(16.dp))
+        repeat(6) { ShimmerBox(Modifier.fillMaxWidth().height(56.dp), RoundedCornerShape(12.dp)) }
     }
 }

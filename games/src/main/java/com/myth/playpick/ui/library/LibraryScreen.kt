@@ -1,6 +1,8 @@
 package com.myth.playpick.ui.library
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,21 +19,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.VideoLibrary
-import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.SportsEsports
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,18 +42,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myth.core.design.CoverImage
-import com.myth.core.design.EyebrowStyle
 import com.myth.core.design.MessageState
 import com.myth.playpick.domain.model.LibraryEntry
 import com.myth.playpick.domain.model.LibraryStatus
-import com.myth.playpick.ui.checklist.ProgressRing
 import com.myth.playpick.ui.common.COVER_RATIO
+import com.myth.playpick.ui.common.HudPill
+import com.myth.playpick.ui.common.LinearBar
 import com.myth.playpick.ui.common.OpenGame
 import com.myth.playpick.ui.common.RawgImages
 import com.myth.playpick.ui.common.gameKey
+import com.myth.playpick.ui.navigation.FloatingBarClearance
+import com.myth.playpick.ui.theme.Hud
+import com.myth.playpick.ui.theme.HudLabel
+import com.myth.playpick.ui.theme.HudMeta
+import com.myth.playpick.ui.theme.HudStat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,16 +72,7 @@ fun LibraryScreen(
     var sheetFor by remember { mutableStateOf<LibraryEntry?>(null) }
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
-        Text("Library", style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(start = 20.dp, top = 20.dp))
-        if (!state.isEmpty) {
-            Text(
-                plural(state.counts.values.sum(), "game") + " · " + plural(state.unlockedTotal, "achievement") + " unlocked",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 20.dp, top = 4.dp),
-            )
-        }
-        Spacer(Modifier.height(14.dp))
+        Text("Library", style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 14.dp))
         if (state.isEmpty) {
             MessageState(
                 Icons.Outlined.VideoLibrary,
@@ -86,28 +81,30 @@ fun LibraryScreen(
             )
             return@Column
         }
-        LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StatTile("GAMES", state.counts.values.sum().toString(), Modifier.weight(1f))
+            StatTile("100%", (state.counts[LibraryStatus.MASTERED] ?: 0).toString(), Modifier.weight(1f), accent = true)
+            StatTile("TROPHIES", state.unlockedTotal.toString(), Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(16.dp))
+        LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             items(LibraryViewModel.ORDER) { status ->
-                val count = state.counts[status] ?: 0
-                val selected = state.filter == status
-                Surface(
-                    onClick = { viewModel.setFilter(status) },
-                    shape = CircleShape,
-                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                ) {
-                    Text("${status.label}  $count", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
-                }
+                val label = if (status == LibraryStatus.COMPLETED) "Done" else status.label
+                HudPill("$label  ${state.counts[status] ?: 0}", state.filter == status, { viewModel.setFilter(status) }, mono = false)
             }
         }
-        LazyColumn(contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp), modifier = Modifier.navigationBarsPadding()) {
+        LazyColumn(
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = FloatingBarClearance),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.navigationBarsPadding(),
+        ) {
             state.sections.forEach { section ->
                 item(key = "h-${section.status}") {
                     Text(
-                        section.status.label.uppercase(),
-                        style = EyebrowStyle,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 6.dp),
+                        (if (section.status == LibraryStatus.COMPLETED) "Done" else section.status.label).uppercase(),
+                        style = HudLabel,
+                        color = Hud.Label,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
                     )
                 }
                 items(section.entries, key = { it.game.id }) { entry ->
@@ -120,7 +117,7 @@ fun LibraryScreen(
     sheetFor?.let { entry ->
         ModalBottomSheet(onDismissRequest = { sheetFor = null }, containerColor = MaterialTheme.colorScheme.surfaceContainer) {
             Column(Modifier.navigationBarsPadding().padding(bottom = 12.dp)) {
-                Text(entry.game.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
+                Text(entry.game.name, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
                 LibraryViewModel.ORDER.filter { it != entry.status }.forEach { status ->
                     ListItem(
                         headlineContent = { Text("Move to ${status.label}") },
@@ -139,38 +136,63 @@ fun LibraryScreen(
     }
 }
 
+@Composable
+private fun StatTile(label: String, value: String, modifier: Modifier = Modifier, accent: Boolean = false) {
+    Column(
+        modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainer)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)).padding(horizontal = 12.dp, vertical = 10.dp),
+    ) {
+        Text(label, style = HudLabel.copy(fontSize = 10.sp), color = Hud.Label)
+        Text(value, style = HudStat.copy(fontSize = 22.sp), color = if (accent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 private fun Modifier.clickableRow(onClick: () -> Unit) = combinedClickable(onClick = onClick)
 
+/** Tapping opens the game; tapping its progress opens the checklist; long-press moves or removes it. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun EntryRow(entry: LibraryEntry, onOpen: OpenGame, onChecklist: () -> Unit, onLongClick: () -> Unit) {
     val key = gameKey("library", entry.game.id)
+    val p = entry.progress
+    val complete = p.isComplete
+    val shape = RoundedCornerShape(14.dp)
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
             .combinedClickable(onClick = { onOpen(entry.game, key) }, onLongClick = onLongClick)
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CoverImage(RawgImages.cover(entry.game.coverUrl), entry.game.name, Modifier.width(120.dp), aspectRatio = COVER_RATIO, sharedKey = key, placeholder = Icons.Rounded.SportsEsports)
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(entry.game.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        CoverImage(RawgImages.cover(entry.game.coverUrl), entry.game.name, Modifier.width(96.dp), aspectRatio = COVER_RATIO, sharedKey = key, shape = RoundedCornerShape(9.dp), placeholder = Icons.Rounded.SportsEsports)
+        Spacer(Modifier.width(12.dp))
+        Column(
+            Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).combinedClickable(onClick = onChecklist).padding(vertical = 2.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(entry.game.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    if (p.total > 0) "${(p.fraction * 100).toInt()}%" else "—",
+                    style = HudStat.copy(fontSize = 12.sp),
+                    color = if (complete) Hud.Gold else MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            LinearBar(if (p.total > 0) p.fraction else 0f)
             Text(
-                if (entry.progress.total > 0) "${entry.progress.unlocked} of ${entry.progress.total} achievements" else "No checklist yet",
-                style = MaterialTheme.typography.bodySmall,
+                when {
+                    p.total == 0 -> "OPEN CHECKLIST"
+                    complete -> "ALL ${p.total} UNLOCKED"
+                    else -> "${p.unlocked} / ${p.total} ACHIEVEMENTS"
+                },
+                style = HudMeta.copy(fontSize = 11.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Spacer(Modifier.width(8.dp))
-        if (entry.progress.total > 0) {
-            IconButton(onClick = onChecklist, modifier = Modifier.width(52.dp).height(52.dp)) { ProgressRing(entry.progress, size = 44.dp) }
-        } else {
-            IconButton(onClick = onChecklist) { Icon(Icons.Rounded.Checklist, contentDescription = "Open checklist", tint = MaterialTheme.colorScheme.primary) }
-        }
     }
 }
-
-private fun plural(n: Int, noun: String) = "$n $noun" + if (n == 1) "" else "s"

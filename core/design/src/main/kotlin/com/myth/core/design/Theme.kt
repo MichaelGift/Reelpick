@@ -1,9 +1,11 @@
 package com.myth.core.design
 
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -13,6 +15,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
 /**
@@ -38,6 +41,8 @@ data class BrandPalette(
     val secondaryLight: Color,
     val tertiaryLight: Color,
     val ratingLight: Color,
+    /** Text and icons on the brand gradient (filled primary buttons). */
+    val onGradient: Color = Color.White,
 )
 
 private fun darkColors(p: BrandPalette) = darkColorScheme(
@@ -99,9 +104,12 @@ data class BrandTokens(
     /** Gradient from transparent to the page background, used to fade artwork into content. */
     val fadeToBackground: Brush,
     val isDark: Boolean,
+    val onGradient: Color,
+    /** Shape of buttons and other tappable controls: pills for Reelpick, rounded squares for Playpick. */
+    val controlShape: Shape,
 )
 
-private fun brandTokens(palette: BrandPalette, colors: ColorScheme, dark: Boolean): BrandTokens {
+private fun brandTokens(palette: BrandPalette, colors: ColorScheme, dark: Boolean, controlShape: Shape): BrandTokens {
     val gradientColors = listOf(palette.accent, palette.accentEnd)
     return BrandTokens(
         gradient = Brush.linearGradient(gradientColors),
@@ -114,6 +122,8 @@ private fun brandTokens(palette: BrandPalette, colors: ColorScheme, dark: Boolea
             1f to colors.background,
         ),
         isDark = dark,
+        onGradient = palette.onGradient,
+        controlShape = controlShape,
     )
 }
 
@@ -132,11 +142,20 @@ private val AppShapes = Shapes(
     extraLarge = RoundedCornerShape(30.dp),
 )
 
-/** Material theme plus brand tokens for one app. */
+/**
+ * Material theme plus brand tokens for one app. Surfaces and shapes are shared; the palette, the
+ * typography and the control shape are each app's own.
+ */
 @Composable
-fun BrandTheme(palette: BrandPalette, dark: Boolean, content: @Composable () -> Unit) {
+fun BrandTheme(
+    palette: BrandPalette,
+    dark: Boolean,
+    typography: Typography = AppTypography,
+    controlShape: Shape = CircleShape,
+    content: @Composable () -> Unit,
+) {
     val colors = if (dark) darkColors(palette) else lightColors(palette)
-    CompositionLocalProvider(LocalBrand provides brandTokens(palette, colors, dark)) {
-        MaterialTheme(colorScheme = colors, typography = AppTypography, shapes = AppShapes, content = content)
+    CompositionLocalProvider(LocalBrand provides brandTokens(palette, colors, dark, controlShape)) {
+        MaterialTheme(colorScheme = colors, typography = typography, shapes = AppShapes, content = content)
     }
 }

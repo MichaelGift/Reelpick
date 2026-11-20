@@ -31,7 +31,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.myth.core.design.Card
-import com.myth.core.design.EyebrowStyle
+import com.myth.playpick.ui.theme.HudLabel
 import com.myth.playpick.domain.model.Platform
 import com.myth.playpick.domain.model.ThemeMode
 import com.myth.playpick.domain.model.UserPreferences
@@ -40,6 +40,7 @@ import com.myth.playpick.domain.repository.FeedCacheRepository
 import com.myth.playpick.domain.repository.FeedbackRepository
 import com.myth.playpick.domain.repository.UserPreferencesRepository
 import com.myth.playpick.ui.common.RawgAttribution
+import com.myth.playpick.ui.navigation.FloatingBarClearance
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -114,7 +115,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
         )
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(FloatingBarClearance))
     }
 
     if (confirmReset) {
@@ -132,7 +133,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
 private fun Section(title: String, subtitle: String?, content: @Composable () -> Unit) {
     Card(Modifier.fillMaxWidth().padding(bottom = 14.dp)) {
         Column(Modifier.padding(18.dp)) {
-            Text(title.uppercase(), style = EyebrowStyle, color = MaterialTheme.colorScheme.primary)
+            Text(title.uppercase(), style = HudLabel, color = MaterialTheme.colorScheme.primary)
             if (subtitle != null) {
                 Spacer(Modifier.height(4.dp))
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

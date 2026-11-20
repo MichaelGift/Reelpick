@@ -21,6 +21,16 @@ It's the second app in this repo, built on the same recommendation engine and de
 
 <sub>Captured on a Pixel emulator (Android 16) with live RAWG data.</sub>
 
+## Design
+
+Playpick shares Reelpick's engine and design system but not its look: a film poster's serif and soft gradients don't suit games. It's styled after a console menu instead ("HUD"):
+
+- **Type:** Space Grotesk for titles, Inter for reading, JetBrains Mono for every number, label and tag. All three are bundled variable fonts under the SIL Open Font License ([`licenses/`](licenses)).
+- **Colour:** graphite panels with hairline borders instead of shadows and glows, and one electric-lime accent used only for what you can act on or have earned. 100% turns gold, and rarity uses loot colours (grey, green, blue, gold).
+- **Shapes and motion:** rounded-square controls, a floating tab bar, a layered deck for the top picks, and segmented XP-style progress bars.
+
+The shared [`core/design`](../core/design) module takes each app's palette, typography and control shape, so both apps reuse the same components with their own look.
+
 ## Features
 
 - **Onboarding**: pick your platforms, at least 3 genres or tags, then 5 games you loved. They seed your first recommendations.

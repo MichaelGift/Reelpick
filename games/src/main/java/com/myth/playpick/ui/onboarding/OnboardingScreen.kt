@@ -72,7 +72,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.myth.core.design.Brand
 import com.myth.core.design.CoverImage
-import com.myth.core.design.EyebrowStyle
+import com.myth.playpick.ui.theme.HudLabel
 import com.myth.core.design.GradientButton
 import com.myth.core.design.MessageState
 import com.myth.core.design.PosterShape
@@ -109,7 +109,7 @@ private fun Welcome(state: OnboardingUiState, onStart: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("RECOMMENDATIONS YOU CAN SEE THROUGH", style = EyebrowStyle, color = MaterialTheme.colorScheme.primary)
+                Text("RECOMMENDATIONS YOU CAN SEE THROUGH", style = HudLabel, color = MaterialTheme.colorScheme.primary)
             }
             Spacer(Modifier.height(12.dp))
             Text("Your next favourite game, and every last achievement.", style = MaterialTheme.typography.displaySmall)
@@ -173,7 +173,7 @@ private fun StepScaffold(
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
         }
         Column(Modifier.padding(horizontal = 20.dp)) {
-            Text("STEP $step OF 3", style = EyebrowStyle, color = MaterialTheme.colorScheme.primary)
+            Text("STEP $step OF 3", style = HudLabel, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(6.dp))
             Text(title, style = MaterialTheme.typography.headlineLarge)
             Spacer(Modifier.height(6.dp))
@@ -257,7 +257,7 @@ private fun Taste(
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Column {
                             Spacer(Modifier.height(10.dp))
-                            Text("TAGS", style = EyebrowStyle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("TAGS", style = HudLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(Modifier.height(10.dp))
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 state.tags.forEach { tag -> TagChip(tag.name, tag.id in state.selectedTags) { onTag(tag.id) } }

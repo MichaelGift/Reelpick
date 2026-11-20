@@ -43,12 +43,12 @@ class ChecklistScreenTest {
     fun tickingAnAchievementUpdatesProgress() {
         show()
         compose.onNodeWithText("0 / 2").assertIsDisplayed()
-        compose.onNodeWithText("Ultra rare · 1.5%").assertIsDisplayed()
+        compose.onNodeWithText("ULTRA RARE · 1.5%").assertIsDisplayed()
 
         compose.onNodeWithText("Falsehood").performClick()
 
         compose.onNodeWithText("1 / 2").assertIsDisplayed()
-        compose.onNodeWithText("1 to go · about 20 h to beat").assertIsDisplayed()
+        compose.onNodeWithText("50%").assertIsDisplayed()
     }
 
     @Test

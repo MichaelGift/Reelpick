@@ -35,5 +35,5 @@ fun MovieAppTheme(
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
-    BrandTheme(ReelpickPalette, dark, content)
+    BrandTheme(ReelpickPalette, dark, content = content)
 }
