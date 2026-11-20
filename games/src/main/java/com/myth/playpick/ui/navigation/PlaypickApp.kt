@@ -48,7 +48,9 @@ import com.myth.core.design.LocalNavAnimatedScope
 import com.myth.core.design.LocalSharedTransitionScope
 import com.myth.core.design.MessageState
 import com.myth.playpick.ui.common.OpenGame
+import com.myth.playpick.ui.details.GameDetailsScreen
 import com.myth.playpick.ui.foryou.ForYouScreen
+import com.myth.playpick.ui.search.SearchScreen
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -66,6 +68,9 @@ data class GameRoute(
     val coverUrl: String? = null,
 )
 
+@Serializable
+data class ChecklistRoute(val gameId: Int, val name: String = "")
+
 private data class TopLevel(val route: Any, val routeClass: KClass<*>, val label: String, val selectedIcon: ImageVector, val icon: ImageVector)
 
 private val topLevel = listOf(
@@ -81,7 +86,7 @@ fun PlaypickApp() {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val destination = backStack?.destination
-    val showBottomBar = destination?.hasRoute(GameRoute::class) != true
+    val showBottomBar = destination?.hasRoute(GameRoute::class) != true && destination?.hasRoute(ChecklistRoute::class) != true
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
@@ -134,10 +139,21 @@ fun PlaypickApp() {
                     composable<ForYouRoute> {
                         CompositionLocalProvider(LocalNavAnimatedScope provides this) { ForYouScreen(onOpen = openGame) }
                     }
-                    composable<SearchRoute> { Placeholder("Search") }
+                    composable<SearchRoute> {
+                        CompositionLocalProvider(LocalNavAnimatedScope provides this) { SearchScreen(onOpen = openGame) }
+                    }
                     composable<LibraryRoute> { Placeholder("Library") }
                     composable<SettingsRoute> { Placeholder("Settings") }
-                    composable<GameRoute> { Placeholder("Game details") }
+                    composable<GameRoute> {
+                        CompositionLocalProvider(LocalNavAnimatedScope provides this) {
+                            GameDetailsScreen(
+                                onBack = navController::popBackStack,
+                                onOpen = openGame,
+                                onChecklist = { id, name -> navController.navigate(ChecklistRoute(id, name)) },
+                            )
+                        }
+                    }
+                    composable<ChecklistRoute> { Placeholder("Checklist") }
                 }
             }
         }

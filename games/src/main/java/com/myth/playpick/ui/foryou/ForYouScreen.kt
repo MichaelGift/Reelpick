@@ -16,6 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -111,7 +116,9 @@ private fun Feed(
     onScope: (Platform?) -> Unit,
     onSave: (Game) -> Unit,
 ) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(30.dp)) {
+    val list = rememberLazyListState()
+    Box(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), state = list, contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(30.dp)) {
         item(key = "hero") {
             Box {
                 if (feed.topPicks.isNotEmpty()) Hero(feed.topPicks.take(HERO_COUNT), onOpen, onSave)
@@ -148,6 +155,10 @@ private fun Feed(
             item(key = "trending") { GameRow("Popular right now", feed.trending.map { GameRowItem(it) }, "trending", onOpen, eyebrow = "Last 90 days", onLongClick = onLongClick) }
         }
         item(key = "attribution") { RawgAttribution() }
+    }
+    // Once the hero scrolls away, cards mustn't slide under the clock.
+    val scrolled by remember { derivedStateOf { list.firstVisibleItemIndex > 0 } }
+    if (scrolled) Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).background(MaterialTheme.colorScheme.background))
     }
 }
 

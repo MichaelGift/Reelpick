@@ -94,6 +94,11 @@ class MappersTest {
     }
 
     @Test
+    fun `markdown headings in descriptions become plain paragraphs`() {
+        assertEquals("Intro.\n\nSetting\nNight City.", cleanDescription("Intro.\n\n\n###Setting\nNight City.  "))
+    }
+
+    @Test
     fun `queries become RAWG parameters, leaving out empty filters`() {
         val params = GameQuery(
             genreIds = setOf(51, 4),

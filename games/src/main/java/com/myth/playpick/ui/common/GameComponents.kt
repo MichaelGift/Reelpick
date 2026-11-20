@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
@@ -81,7 +82,8 @@ fun GameCard(
     game: Game,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    width: Dp = 232.dp,
+    /** Null fills the available width, as in a grid. */
+    width: Dp? = 232.dp,
     caption: String? = null,
     match: Int? = null,
     sharedKey: String? = null,
@@ -89,7 +91,7 @@ fun GameCard(
 ) {
     Column(
         modifier
-            .width(width)
+            .then(if (width != null) Modifier.width(width) else Modifier.fillMaxWidth())
             .clip(PosterShape)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick),
     ) {

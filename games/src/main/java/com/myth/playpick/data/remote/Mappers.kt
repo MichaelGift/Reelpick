@@ -59,7 +59,7 @@ fun GameDetailDto.toDomain(storeLinks: List<StoreLinkDto>, screenshots: List<Str
     val storesById = stores.associate { it.store.id to it.store.toDomain() }
     return GameDetails(
         game = toGame().copy(screenshots = screenshots),
-        description = descriptionRaw.trim(),
+        description = cleanDescription(descriptionRaw),
         developers = developers.map { it.toDomain() },
         publishers = publishers.map { it.toDomain() },
         website = website?.takeIf(String::isNotBlank),
@@ -73,6 +73,13 @@ fun GameDetailDto.toDomain(storeLinks: List<StoreLinkDto>, screenshots: List<Str
         additionsCount = additionsCount,
     )
 }
+
+/** RAWG descriptions carry Markdown headings ("###Setting"); headings become plain paragraphs. */
+internal fun cleanDescription(raw: String): String = raw.lines()
+    .map { it.trim().trimStart('#').trim() }
+    .joinToString("\n")
+    .replace(Regex("\n{3,}"), "\n\n")
+    .trim()
 
 fun AchievementDto.toDomain() = Achievement(
     id = id,
