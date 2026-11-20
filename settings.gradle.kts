@@ -16,3 +16,4 @@ rootProject.name = "MovieApp"
 include(":app")
 include(":core:recommend")
 include(":core:design")
+include(":games")
