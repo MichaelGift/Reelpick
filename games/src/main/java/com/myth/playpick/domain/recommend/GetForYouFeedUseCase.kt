@@ -74,9 +74,7 @@ class GetForYouFeedUseCase @Inject constructor(
 
         val feed = GameFeed(
             topPicks = ranked.take(TOP_PICKS),
-            becauseYouLiked = seeds.take(SEED_ROWS).map { seed ->
-                SeedRow(seed, ranked.filter { pick -> seed.id in candidates.seedsOf(pick.game.id) }.take(ROW_SIZE))
-            }.filter { it.picks.isNotEmpty() },
+            becauseYouLiked = seedRows(seeds.take(SEED_ROWS), ranked, candidates),
             genreRows = profile.top(GENRE_ROWS) { it.kind == GameFeature.Kind.GENRE }.mapNotNull { feature ->
                 val name = names[feature] ?: return@mapNotNull null
                 GenreRow(Named(feature.id, name), ranked.filter { pick -> pick.game.genres.any { it.id == feature.id } }.take(ROW_SIZE))
@@ -102,6 +100,16 @@ class GetForYouFeedUseCase @Inject constructor(
     }
 
     private fun CandidatePool.seedsOf(gameId: Int): Set<Int> = candidates.firstOrNull { it.item.id == gameId }?.seedKeys.orEmpty()
+
+    /** A game reached from several seeds appears only in the first (most recent) seed's row. */
+    private fun seedRows(seeds: List<Game>, ranked: List<Pick>, pool: CandidatePool): List<SeedRow> {
+        val shown = mutableSetOf<Int>()
+        return seeds.map { seed ->
+            val picks = ranked.filter { it.game.id !in shown && seed.id in pool.seedsOf(it.game.id) }.take(ROW_SIZE)
+            shown += picks.map { it.game.id }
+            SeedRow(seed, picks)
+        }.filter { it.picks.isNotEmpty() }
+    }
 
     /** Genre and tag names come with the games themselves, so no extra lookups are needed. */
     private fun nameIndex(pool: CandidatePool, seeds: List<Game>): Map<GameFeature, String> = buildMap {

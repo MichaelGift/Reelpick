@@ -1,4 +1,17 @@
-# Reelpick: film and series recommendations you can see through
+# Reelpick & Playpick: recommendations you can see through
+
+Two Android apps built on one recommendation engine and one design system:
+
+| | |
+|---|---|
+| **Reelpick** (this page) | Films and TV series from TMDB, with cast & crew pages and where to watch. |
+| **[Playpick](games/README.md)** | Games from RAWG, with a completion checklist built from each game's achievements. |
+
+Both show a **taste match** and **why** for every pick, and show you the taste profile they've learned. The shared parts live in [`core/recommend`](core/recommend) (the taste profile and ranker, plain Kotlin) and [`core/design`](core/design) (theme, type and components, with each app supplying its own brand palette).
+
+---
+
+## Reelpick
 
 An Android app that learns what you like and builds a personal **For You** feed of films and TV series. Every pick shows a **taste match** and **why it's there** ("Because you liked *Arrival*"), and the app shows you the taste profile it has learned. Built with Jetpack Compose, Hilt, Room and the TMDB API.
 
@@ -25,7 +38,7 @@ An Android app that learns what you like and builds a personal **For You** feed 
 
 <sub>Captured on a Pixel emulator (Android 16) with live TMDB data. Saving four crime and drama films shifted the profile, which is why "Crime" appears in the taste card and the matches read 76%.</sub>
 
-## Design
+### Design
 
 A dark-first, cinematic UI built from scratch as a small design system (`ui/theme`, `ui/common`):
 
@@ -34,7 +47,7 @@ A dark-first, cinematic UI built from scratch as a small design system (`ui/them
 - **Motion:** shared-element poster transitions into details, hero parallax, an auto-advancing hero, shimmer skeletons, and haptics on ratings.
 - **Explainability:** taste-match badges, reason pills, and a "What shapes your picks" card that shows the learned genre weights.
 
-## Features
+### Features
 
 - **Onboarding**: a cinematic welcome over a drifting poster mosaic. Then pick 3 or more genres and at least 5 films or series you've enjoyed; these seed your taste profile.
 - **For You feed**: an **All / Movies / Series** switch (instant and offline, remembered between launches), a full-bleed hero carousel, a ranked *Top 10 for you*, your taste profile, and rows for *Because you liked X*, *Your genres* and *Trending*. Pull to refresh, and long-press any poster to like, dislike, hide it or save it.
@@ -45,7 +58,7 @@ A dark-first, cinematic UI built from scratch as a small design system (`ui/them
 - **Watchlist**: an offline poster grid. Long-press to mark as watched or remove, with undo.
 - **Settings**: streaming region, light/dark/system theme, and a taste-profile reset.
 
-## How recommendations work
+### How recommendations work
 
 The engine lives in [`domain/recommend`](app/src/main/java/com/myth/movieapp/domain/recommend). It's plain Kotlin with no Android dependencies and is fully unit-tested.
 
@@ -84,7 +97,16 @@ The engine lives in [`domain/recommend`](app/src/main/java/com/myth/movieapp/dom
 
 4. **Feed** ([`GetForYouFeedUseCase`](app/src/main/java/com/myth/movieapp/domain/recommend/GetForYouFeedUseCase.kt)) ranks one candidate pool, builds the sections for each scope (all, films, series) and caches them in Room, so the home screen opens instantly, switching scope needs no network, and it all works offline.
 
-## Architecture
+### Architecture
+
+```
+core/recommend Shared, plain Kotlin: generic TasteProfile<F> and Ranker over any item type (ItemTraits)
+core/design    Shared Compose design system: BrandTheme(palette), Fraunces/Manrope, generic components
+app/           Reelpick
+games/         Playpick (see games/README.md)
+```
+
+Inside each app:
 
 ```
 ui/            Compose screens + @HiltViewModel per screen (StateFlow UI state)
@@ -100,11 +122,11 @@ di/            Hilt modules
 - Repositories return `Result` rather than throwing. The UI maps errors to clear messages (offline, bad token, missing token).
 - The TMDB token is sent as a bearer header by an OkHttp interceptor, so it never appears in URLs or logs.
 
-## Tech stack
+### Tech stack
 
 Kotlin 2.3 · Jetpack Compose (Material 3) · Navigation Compose · Hilt · KSP · Room · DataStore · Retrofit + OkHttp + kotlinx.serialization · Coil 3 · Coroutines/Flow · JUnit, Turbine, Compose UI tests · GitHub Actions
 
-## How to run
+### How to run
 
 1. Clone the project and open it in Android Studio:
    ```bash
@@ -118,22 +140,23 @@ Kotlin 2.3 · Jetpack Compose (Material 3) · Navigation Compose · Hilt · KSP 
    On CI, set a `TMDB_ACCESS_TOKEN` repository secret instead. Without a token the app still builds and explains what's missing.
 4. Sync Gradle and run the `app` configuration. You need JDK 17 or newer; Android Studio's bundled JDK works.
 
-## Tests
+### Tests
 
 ```bash
-./gradlew testDebugUnitTest
+./gradlew testDebugUnitTest :core:recommend:test
 ```
 
 ```bash
 ./gradlew connectedDebugAndroidTest
 ```
 
+- **Core tests** check the generic profile and ranker with non-film types, so neither app's model leaks into them.
 - **Unit tests** (JVM) cover the taste profile, the ranker, candidate sourcing (including the film/series id collision), feed scopes, the genre map, the TMDB mappers, and the onboarding, search and person ViewModels.
 - **Instrumented tests** cover the Room repositories and the v1 → v2 migration, plus Compose UI tests for onboarding, the details screen (films and series) and the person page.
 
-## Attribution
+### Attribution
 
-This product uses the TMDB API but is not endorsed or certified by TMDB. Film, TV and people data and images © [TMDB](https://www.themoviedb.org/). Streaming availability is provided by JustWatch.
+Reelpick uses the TMDB API but is not endorsed or certified by TMDB. Film, TV and people data and images © [TMDB](https://www.themoviedb.org/). Streaming availability is provided by JustWatch.
 
 ## Contributing
 

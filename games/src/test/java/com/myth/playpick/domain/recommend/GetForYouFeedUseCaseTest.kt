@@ -66,6 +66,20 @@ class GetForYouFeedUseCaseTest {
     }
 
     @Test
+    fun `a game reached from two seeds shows only in the newest seed's row`() = runTest {
+        val celeste = game(500, tags = listOf(49), name = "Celeste")
+        feedback.setFeedback(celeste, FeedbackType.LIKE) // newer than Hollow Knight
+        rawg.seriesById[500] = listOf(game(1, tags = listOf(49)))
+        rawg.seriesById[9767] = listOf(game(1, tags = listOf(49)), game(2, tags = listOf(metroidvania)))
+
+        val rows = useCase()().getOrThrow().becauseYouLiked
+
+        assertEquals(listOf("Celeste", "Hollow Knight"), rows.map { it.seed.name })
+        assertEquals(listOf(1), rows[0].picks.map { it.game.id })
+        assertEquals(listOf(2), rows[1].picks.map { it.game.id })
+    }
+
+    @Test
     fun `games already judged or owned are never recommended`() = runTest {
         library.setStatus(game(10, genres = listOf(rpg)), LibraryStatus.BACKLOG)
         feedback.setFeedback(game(11, genres = listOf(rpg)), FeedbackType.NOT_INTERESTED)

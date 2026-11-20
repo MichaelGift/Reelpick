@@ -20,13 +20,18 @@ jobs:
 
       - name: Build, unit test and lint
         env:
-          # Optional: the build succeeds without it; the app just shows a "missing token" state.
+          # Optional: the builds succeed without them; each app shows a "missing key" state.
           TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
-        run: ./gradlew assembleDebug testDebugUnitTest lintDebug
+          RAWG_API_KEY: ${{ secrets.RAWG_API_KEY }}
+        # Builds both apps; :core:recommend is a plain JVM module, so its tests run under `test`.
+        run: ./gradlew assembleDebug testDebugUnitTest :core:recommend:test lintDebug
 
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: reports
-          path: app/build/reports
+          path: |
+            app/build/reports
+            games/build/reports
+            core/recommend/build/reports

@@ -257,7 +257,8 @@ private fun TasteCard(taste: TasteSummary) {
             Spacer(Modifier.height(14.dp))
             val all = (taste.tags + taste.genres)
             val max = all.maxOfOrNull { it.weight }?.coerceAtLeast(0.0001) ?: 1.0
-            (taste.tags.take(3) + taste.genres.take(2)).forEach { WeightBar(it, max) }
+            // "RPG" is both a tag and a genre on RAWG; show each label once.
+            (taste.tags.take(3) + taste.genres.take(2)).distinctBy { it.name.lowercase() }.forEach { WeightBar(it, max) }
         }
     }
 }

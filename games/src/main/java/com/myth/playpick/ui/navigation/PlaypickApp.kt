@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Construction
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.VideoLibrary
@@ -46,13 +45,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.myth.core.design.LocalNavAnimatedScope
 import com.myth.core.design.LocalSharedTransitionScope
-import com.myth.core.design.MessageState
 import com.myth.playpick.ui.common.OpenGame
 import com.myth.playpick.ui.checklist.ChecklistScreen
 import com.myth.playpick.ui.details.GameDetailsScreen
 import com.myth.playpick.ui.library.LibraryScreen
 import com.myth.playpick.ui.foryou.ForYouScreen
 import com.myth.playpick.ui.search.SearchScreen
+import com.myth.playpick.ui.settings.SettingsScreen
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -149,7 +148,7 @@ fun PlaypickApp() {
                             LibraryScreen(onOpen = openGame, onChecklist = { id, name -> navController.navigate(ChecklistRoute(id, name)) })
                         }
                     }
-                    composable<SettingsRoute> { Placeholder("Settings") }
+                    composable<SettingsRoute> { SettingsScreen() }
                     composable<GameRoute> {
                         CompositionLocalProvider(LocalNavAnimatedScope provides this) {
                             GameDetailsScreen(
@@ -164,10 +163,4 @@ fun PlaypickApp() {
             }
         }
     }
-}
-
-/** Screens still to come on this branch. */
-@Composable
-private fun Placeholder(name: String) {
-    MessageState(Icons.Outlined.Construction, name, "Coming in the next commit.")
 }
