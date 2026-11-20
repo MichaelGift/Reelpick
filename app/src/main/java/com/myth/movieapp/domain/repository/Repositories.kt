@@ -1,6 +1,7 @@
 package com.myth.movieapp.domain.repository
 
 import com.myth.movieapp.domain.model.Feedback
+import com.myth.movieapp.domain.model.FeedScope
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Genre
 import com.myth.movieapp.domain.model.MediaType
@@ -56,11 +57,12 @@ interface UserPreferencesRepository {
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun addRecentSearch(query: String)
     suspend fun clearRecentSearches()
+    suspend fun setFeedScope(scope: FeedScope)
 }
 
-/** Last computed For You feed, so the home screen has something to show offline. */
+/** Last computed For You feed per scope, so the home screen has something to show offline. */
 interface FeedCacheRepository {
-    val cachedFeed: Flow<ForYouFeed?>
-    suspend fun save(feed: ForYouFeed)
+    fun cachedFeed(scope: FeedScope): Flow<ForYouFeed?>
+    suspend fun save(scope: FeedScope, feed: ForYouFeed)
     suspend fun clear()
 }

@@ -150,6 +150,17 @@ data class Feedback(val movie: Title, val type: FeedbackType, val timestampMilli
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+/** Which titles the For You feed shows. */
+enum class FeedScope {
+    ALL, MOVIES, TV;
+
+    fun includes(type: MediaType): Boolean = when (this) {
+        ALL -> true
+        MOVIES -> type == MediaType.MOVIE
+        TV -> type == MediaType.TV
+    }
+}
+
 data class UserPreferences(
     val onboardingComplete: Boolean = false,
     val selectedGenreIds: Set<Int> = emptySet(),
@@ -157,6 +168,7 @@ data class UserPreferences(
     val region: String? = null,
     val themeMode: ThemeMode = ThemeMode.DARK,
     val recentSearches: List<String> = emptyList(),
+    val feedScope: FeedScope = FeedScope.ALL,
 )
 
 data class PagedTitles(val titles: List<Title>, val page: Int, val totalPages: Int) {

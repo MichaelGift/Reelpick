@@ -9,7 +9,7 @@ import com.myth.movieapp.domain.model.MediaType
 import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.domain.model.TitleDetails
-import com.myth.movieapp.domain.recommend.TasteProfile
+import com.myth.movieapp.domain.recommend.GetTasteProfileUseCase
 import com.myth.movieapp.domain.repository.FeedbackRepository
 import com.myth.movieapp.domain.repository.TitleRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
@@ -57,6 +57,7 @@ class DetailsViewModel @Inject constructor(
     private val feedback: FeedbackRepository,
     private val watchlist: WatchlistRepository,
     private val preferences: UserPreferencesRepository,
+    private val tasteProfile: GetTasteProfileUseCase,
 ) : ViewModel() {
 
     private val route = savedStateHandle.toRoute<DetailsRoute>()
@@ -88,7 +89,7 @@ class DetailsViewModel @Inject constructor(
                 ?: "US"
             movies.details(key, region)
                 .onSuccess { details ->
-                    val fit = tasteFit(details, prefs.selectedGenreIds)
+                    val fit = tasteFit(details)
                     content.value = DetailsContent.Loaded(details, emptyList(), region, fit)
                     // "More like this" is a nice-to-have; failures here don't block the screen.
                     movies.recommendationsFor(key).onSuccess { similar ->
@@ -99,16 +100,16 @@ class DetailsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun tasteFit(details: TitleDetails, selectedGenres: Set<Int>): TasteFit? {
-        // Exclude this movie's own rating so liking it doesn't inflate its own match.
-        val signals = feedback.feedback.first().filterNot { it.movie.key == key }
-        val saved = watchlist.watchlist.first().filterNot { it.key == key }
-        val profile = TasteProfile.build(selectedGenres, signals, saved)
+    private suspend fun tasteFit(details: TitleDetails): TasteFit? {
+        // Leave this title's own rating out so liking it doesn't inflate its own match.
+        val profile = tasteProfile(excluding = key)
         val match = profile.matchPercent(details.title.genreIds) ?: return null
-        val shared = details.genres
-            .filter { profile.weightOf(it.id) > 0.0 }
-            .sortedByDescending { profile.weightOf(it.id) }
-            .map { it.name }
+        // Name genres from the shared space (a series' "Sci-Fi & Fantasy" is Science Fiction + Fantasy).
+        val names = movies.genres().getOrDefault(emptyList()).associate { it.id to it.name }
+        val shared = details.title.genreIds
+            .filter { profile.weightOf(it) > 0.0 }
+            .sortedByDescending { profile.weightOf(it) }
+            .mapNotNull { names[it] }
             .take(3)
         return TasteFit(match, shared)
     }

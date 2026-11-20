@@ -6,6 +6,7 @@ import com.myth.movieapp.data.local.FeedbackDao
 import com.myth.movieapp.data.local.FeedbackEntity
 import com.myth.movieapp.data.local.WatchlistDao
 import com.myth.movieapp.data.local.WatchlistEntity
+import com.myth.movieapp.domain.model.FeedScope
 import com.myth.movieapp.domain.model.Feedback
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Title
@@ -65,12 +66,12 @@ class FeedCacheRepositoryImpl @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
 
     // A cache from an older app version may not decode; it's only a cache, so start fresh.
-    override val cachedFeed: Flow<ForYouFeed?> = dao.observe().map { row ->
+    override fun cachedFeed(scope: FeedScope): Flow<ForYouFeed?> = dao.observe(scope.ordinal).map { row ->
         row?.let { runCatching { json.decodeFromString(ForYouFeed.serializer(), it.feed) }.getOrNull() }
     }
 
-    override suspend fun save(feed: ForYouFeed) =
-        dao.upsert(FeedCacheEntity(feed = json.encodeToString(ForYouFeed.serializer(), feed)))
+    override suspend fun save(scope: FeedScope, feed: ForYouFeed) =
+        dao.upsert(FeedCacheEntity(scope.ordinal, json.encodeToString(ForYouFeed.serializer(), feed)))
 
     override suspend fun clear() = dao.clear()
 }

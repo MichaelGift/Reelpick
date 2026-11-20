@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import com.myth.movieapp.domain.model.FeedScope
 import com.myth.movieapp.domain.model.ThemeMode
 import com.myth.movieapp.domain.model.UserPreferences
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
@@ -28,6 +29,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val region = stringPreferencesKey("region")
         val theme = stringPreferencesKey("theme")
         val recentSearches = stringPreferencesKey("recent_searches")
+        val feedScope = stringPreferencesKey("feed_scope")
     }
 
     override val preferences: Flow<UserPreferences> = dataStore.data
@@ -40,6 +42,8 @@ class UserPreferencesRepositoryImpl @Inject constructor(
                 themeMode = prefs[Keys.theme]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
                     ?: ThemeMode.DARK,
                 recentSearches = prefs[Keys.recentSearches]?.split(SEPARATOR)?.filter(String::isNotBlank).orEmpty(),
+                feedScope = prefs[Keys.feedScope]?.let { runCatching { FeedScope.valueOf(it) }.getOrNull() }
+                    ?: FeedScope.ALL,
             )
         }
 
@@ -79,6 +83,10 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun clearRecentSearches() {
         dataStore.edit { it.remove(Keys.recentSearches) }
+    }
+
+    override suspend fun setFeedScope(scope: FeedScope) {
+        dataStore.edit { it[Keys.feedScope] = scope.name }
     }
 
     private companion object {

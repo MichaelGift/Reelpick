@@ -1,5 +1,6 @@
 package com.myth.movieapp.testing
 
+import com.myth.movieapp.domain.model.FeedScope
 import com.myth.movieapp.domain.model.Feedback
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Genre
@@ -13,6 +14,7 @@ import com.myth.movieapp.domain.model.TitleDetails
 import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.domain.model.UserPreferences
 import com.myth.movieapp.domain.recommend.ForYouFeed
+import com.myth.movieapp.domain.recommend.GetTasteProfileUseCase
 import com.myth.movieapp.domain.repository.FeedCacheRepository
 import com.myth.movieapp.domain.repository.FeedbackRepository
 import com.myth.movieapp.domain.repository.TitleRepository
@@ -137,11 +139,19 @@ class FakeUserPreferencesRepository(initial: UserPreferences = UserPreferences()
     override suspend fun addRecentSearch(query: String) =
         state.update { it.copy(recentSearches = listOf(query) + it.recentSearches) }
     override suspend fun clearRecentSearches() = state.update { it.copy(recentSearches = emptyList()) }
+    override suspend fun setFeedScope(scope: FeedScope) = state.update { it.copy(feedScope = scope) }
 }
 
 class FakeFeedCacheRepository : FeedCacheRepository {
-    private val state = MutableStateFlow<ForYouFeed?>(null)
-    override val cachedFeed: Flow<ForYouFeed?> = state
-    override suspend fun save(feed: ForYouFeed) { state.value = feed }
-    override suspend fun clear() { state.value = null }
+    private val state = MutableStateFlow<Map<FeedScope, ForYouFeed>>(emptyMap())
+    override fun cachedFeed(scope: FeedScope): Flow<ForYouFeed?> = state.map { it[scope] }
+    override suspend fun save(scope: FeedScope, feed: ForYouFeed) = state.update { it + (scope to feed) }
+    override suspend fun clear() = state.update { emptyMap() }
 }
+
+/** The real use case over the fake repositories, as wired in production. */
+fun tasteProfileUseCase(
+    feedback: FeedbackRepository,
+    watchlist: WatchlistRepository,
+    prefs: UserPreferencesRepository,
+) = GetTasteProfileUseCase(feedback, watchlist, prefs)

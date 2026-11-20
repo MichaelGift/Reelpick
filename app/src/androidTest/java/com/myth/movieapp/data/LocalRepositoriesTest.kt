@@ -4,9 +4,11 @@ import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.myth.movieapp.data.local.AppDatabase
+import com.myth.movieapp.data.local.FeedCacheEntity
 import com.myth.movieapp.data.repository.FeedCacheRepositoryImpl
 import com.myth.movieapp.data.repository.FeedbackRepositoryImpl
 import com.myth.movieapp.data.repository.WatchlistRepositoryImpl
+import com.myth.movieapp.domain.model.FeedScope
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.recommend.Recommendation
@@ -81,8 +83,17 @@ class LocalRepositoriesTest {
             generatedAtMillis = 42,
         )
 
-        repo.save(feed)
+        repo.save(FeedScope.TV, feed)
 
-        assertEquals(feed, repo.cachedFeed.first())
+        assertEquals(feed, repo.cachedFeed(FeedScope.TV).first())
+        assertNull(repo.cachedFeed(FeedScope.ALL).first()) // scopes are cached separately
+    }
+
+    @Test
+    fun undecodableFeedCacheReadsAsEmpty() = runTest {
+        // e.g. a cache written by an older app version with a different feed shape
+        db.feedCacheDao().upsert(FeedCacheEntity(FeedScope.ALL.ordinal, "{\"topPicks\": 42}"))
+
+        assertNull(FeedCacheRepositoryImpl(db.feedCacheDao()).cachedFeed(FeedScope.ALL).first())
     }
 }

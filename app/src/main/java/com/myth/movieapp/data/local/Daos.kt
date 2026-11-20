@@ -62,8 +62,8 @@ interface GenreDao {
 
 @Dao
 interface FeedCacheDao {
-    @Query("SELECT * FROM feed_cache WHERE id = 0")
-    fun observe(): Flow<FeedCacheEntity?>
+    @Query("SELECT * FROM feed_cache WHERE id = :id")
+    fun observe(id: Int): Flow<FeedCacheEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: FeedCacheEntity)

@@ -12,6 +12,7 @@ import com.myth.movieapp.testing.FakeUserPreferencesRepository
 import com.myth.movieapp.testing.FakeWatchlistRepository
 import com.myth.movieapp.testing.MainDispatcherRule
 import com.myth.movieapp.testing.movie
+import com.myth.movieapp.testing.tasteProfileUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -45,7 +46,8 @@ class OnboardingViewModelTest {
         feedback,
         prefs,
         GetForYouFeedUseCase(
-            movies, feedback, watchlist, prefs, cache, CandidateSource(movies), RecommendationRanker(), Clock.systemUTC(),
+            movies, tasteProfileUseCase(feedback, watchlist, prefs), cache, CandidateSource(movies),
+            RecommendationRanker(), Clock.systemUTC(),
         ),
     )
 

@@ -40,6 +40,7 @@ data class GenreEntity(
  */
 @Entity(tableName = "feed_cache")
 data class FeedCacheEntity(
-    @PrimaryKey val id: Int = 0,
+    /** The FeedScope's ordinal. */
+    @PrimaryKey val id: Int,
     val feed: String,
 )

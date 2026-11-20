@@ -67,7 +67,7 @@ class MigrationTest {
             // The same id as a series is a different title.
             assertFalse(watchlist.isInWatchlist(seriesKey(155)).first())
 
-            assertEquals(null, db.feedCacheDao().observe().first())
+            assertEquals(null, db.feedCacheDao().observe(0).first())
         } finally {
             db.close()
         }

@@ -22,6 +22,7 @@ import com.myth.movieapp.testing.FakeUserPreferencesRepository
 import com.myth.movieapp.testing.FakeWatchlistRepository
 import com.myth.movieapp.testing.movie
 import com.myth.movieapp.testing.movieKey
+import com.myth.movieapp.testing.tasteProfileUseCase
 import com.myth.movieapp.ui.details.DetailsScreen
 import com.myth.movieapp.ui.details.DetailsViewModel
 import com.myth.movieapp.ui.onboarding.OnboardingScreen
@@ -56,7 +57,7 @@ class ScreenTests {
             )
         }
         val useCase = GetForYouFeedUseCase(
-            movies, feedback, watchlist, prefs, FakeFeedCacheRepository(), CandidateSource(movies),
+            movies, tasteProfileUseCase(feedback, watchlist, prefs), FakeFeedCacheRepository(), CandidateSource(movies),
             RecommendationRanker(), Clock.systemUTC(),
         )
         val viewModel = OnboardingViewModel(movies, feedback, prefs, useCase)
@@ -86,6 +87,7 @@ class ScreenTests {
         )
         val viewModel = DetailsViewModel(
             SavedStateHandle(mapOf("movieId" to 42, "title" to "Dune")), movies, feedback, watchlist, prefs,
+            tasteProfileUseCase(feedback, watchlist, prefs),
         )
         compose.setContent { MovieAppTheme { DetailsScreen(onBack = {}, onMovieClick = { _, _ -> }, viewModel = viewModel) } }
 
