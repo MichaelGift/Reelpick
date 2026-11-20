@@ -19,7 +19,7 @@ class TasteProfileTest {
 
         assertTrue(profile.isEmpty)
         assertEquals(0.0, profile.affinity(listOf(action)), 0.0)
-        assertEquals(emptyList<Int>(), profile.topGenres(3))
+        assertEquals(emptyList<Int>(), profile.top(3))
     }
 
     @Test
@@ -33,7 +33,7 @@ class TasteProfileTest {
         // comedy = 1 + 2 = 3, action = 1  → normalised by 3
         assertEquals(1.0, profile.weightOf(comedy), 1e-9)
         assertEquals(1.0 / 3, profile.weightOf(action), 1e-9)
-        assertEquals(listOf(comedy, action), profile.topGenres(3))
+        assertEquals(listOf(comedy, action), profile.top(3))
     }
 
     @Test
@@ -48,7 +48,7 @@ class TasteProfileTest {
         )
 
         assertTrue(profile.weightOf(horror) < 0)
-        assertEquals(listOf(action), profile.topGenres(3))
+        assertEquals(listOf(action), profile.top(3))
         assertTrue(profile.affinity(listOf(horror)) < 0)
     }
 
@@ -67,7 +67,7 @@ class TasteProfileTest {
     fun `watchlist counts as a mild positive signal`() {
         val profile = TasteProfile.build(emptySet(), emptyList(), listOf(movie(1, listOf(comedy))))
 
-        assertEquals(listOf(comedy), profile.topGenres(1))
+        assertEquals(listOf(comedy), profile.top(1))
     }
 
     @Test
@@ -98,6 +98,6 @@ class TasteProfileTest {
             watchlist = emptyList(),
         )
 
-        assertEquals(comedy, profile.dominantGenre(listOf(action, comedy)))
+        assertEquals(comedy, profile.dominant(listOf(action, comedy)))
     }
 }

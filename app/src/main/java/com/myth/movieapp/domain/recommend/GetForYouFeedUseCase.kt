@@ -48,7 +48,7 @@ class GetForYouFeedUseCase @Inject constructor(
                 .sortedByDescending { it.timestampMillis }
                 .map { it.movie }
                 .take(MAX_SEEDS)
-            val topGenres = profile.topGenres(MAX_GENRES)
+            val topGenres = profile.top(MAX_GENRES)
 
             val key = PoolKey(seeds.map { it.key }, topGenres)
             val candidates = pool?.takeIf { !forceRefresh && key == poolKey }
@@ -82,7 +82,7 @@ class GetForYouFeedUseCase @Inject constructor(
                 generatedAtMillis = clock.millis(),
                 genreNames = genreNames,
                 taste = TasteSummary(
-                    topGenres = profile.topGenres(TASTE_GENRES).mapNotNull { id ->
+                    topGenres = profile.top(TASTE_GENRES).mapNotNull { id ->
                         genreNames[id]?.let { GenreWeight(it, profile.weightOf(id)) }
                     },
                     likes = feedback.count { it.type == FeedbackType.LIKE },
