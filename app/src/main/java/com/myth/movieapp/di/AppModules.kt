@@ -10,6 +10,7 @@ import com.myth.movieapp.data.local.AppDatabase
 import com.myth.movieapp.data.local.FeedCacheDao
 import com.myth.movieapp.data.local.FeedbackDao
 import com.myth.movieapp.data.local.GenreDao
+import com.myth.movieapp.data.local.MIGRATION_1_2
 import com.myth.movieapp.data.local.WatchlistDao
 import com.myth.movieapp.data.prefs.UserPreferencesRepositoryImpl
 import com.myth.movieapp.data.remote.AuthInterceptor
@@ -81,7 +82,9 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
-        Room.databaseBuilder(context, AppDatabase::class.java, "movies.db").build()
+        Room.databaseBuilder(context, AppDatabase::class.java, "movies.db")
+            .addMigrations(MIGRATION_1_2)
+            .build()
 
     @Provides fun provideFeedbackDao(db: AppDatabase): FeedbackDao = db.feedbackDao()
     @Provides fun provideWatchlistDao(db: AppDatabase): WatchlistDao = db.watchlistDao()

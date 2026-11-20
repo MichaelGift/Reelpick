@@ -134,7 +134,7 @@ fun DetailsScreen(
         ) {
             GlassIconButton(Icons.AutoMirrored.Rounded.ArrowBack, "Back", onBack)
             Spacer(Modifier.weight(1f))
-            (state.content as? DetailsContent.Loaded)?.details?.movie?.let { movie ->
+            (state.content as? DetailsContent.Loaded)?.details?.title?.let { movie ->
                 Text(
                     movie.title,
                     style = MaterialTheme.typography.titleMedium,
@@ -234,7 +234,7 @@ private fun DetailsBody(
     onMovieClick: OpenTitle,
 ) {
     val details = content.details
-    val movie = details.movie
+    val movie = details.title
     val context = LocalContext.current
 
     Column(Modifier.verticalScroll(scrollState).navigationBarsPadding().padding(bottom = 24.dp)) {
@@ -415,13 +415,13 @@ private fun Synopsis(details: TitleDetails, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(10.dp))
         }
         Text(
-            details.movie.overview.ifBlank { "No synopsis available." },
+            details.title.overview.ifBlank { "No synopsis available." },
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = if (expanded) Int.MAX_VALUE else 4,
             overflow = TextOverflow.Ellipsis,
         )
-        if (details.movie.overview.length > 220) {
+        if (details.title.overview.length > 220) {
             TextButton(onClick = { expanded = !expanded }, contentPadding = PaddingValues(0.dp)) {
                 Text(if (expanded) "Show less" else "Read more")
             }

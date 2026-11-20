@@ -9,6 +9,7 @@ import com.myth.movieapp.testing.FakeTitleRepository
 import com.myth.movieapp.testing.FakeUserPreferencesRepository
 import com.myth.movieapp.testing.FakeWatchlistRepository
 import com.myth.movieapp.testing.movie
+import com.myth.movieapp.testing.movieKey
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -45,7 +46,7 @@ class GetForYouFeedUseCaseTest {
     @Test
     fun `builds sections from liked seeds and top genres and caches the feed`() = runTest {
         feedback.setFeedback(arrival, FeedbackType.LIKE)
-        movies.recommendations[100] = Result.success(listOf(movie(1, listOf(sciFi)), movie(2, listOf(sciFi))))
+        movies.recommendations[movieKey(100)] = Result.success(listOf(movie(1, listOf(sciFi)), movie(2, listOf(sciFi))))
         movies.discover[sciFi] = Result.success(listOf(movie(3, listOf(sciFi)), movie(1, listOf(sciFi))))
         movies.trending = Result.success(listOf(movie(4, listOf(comedy)), arrival))
 
@@ -69,7 +70,7 @@ class GetForYouFeedUseCaseTest {
     @Test
     fun `dislike re-ranks from the cached pool without refetching`() = runTest {
         feedback.setFeedback(arrival, FeedbackType.LIKE)
-        movies.recommendations[100] = Result.success(listOf(movie(1, listOf(sciFi)), movie(2, listOf(sciFi))))
+        movies.recommendations[movieKey(100)] = Result.success(listOf(movie(1, listOf(sciFi)), movie(2, listOf(sciFi))))
         useCase().getOrThrow()
         val fetchesAfterFirstLoad = movies.fetchCount
 
@@ -106,7 +107,7 @@ class GetForYouFeedUseCaseTest {
     @Test
     fun `fails only when every candidate source fails`() = runTest {
         feedback.setFeedback(arrival, FeedbackType.LIKE)
-        movies.recommendations[100] = Result.failure(IOException("offline"))
+        movies.recommendations[movieKey(100)] = Result.failure(IOException("offline"))
         movies.discover[sciFi] = Result.failure(IOException("offline"))
         movies.trending = Result.failure(IOException("offline"))
 

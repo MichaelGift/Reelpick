@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Genre
+import com.myth.movieapp.domain.model.MediaType
 import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.recommend.GetForYouFeedUseCase
 import com.myth.movieapp.domain.repository.FeedbackRepository
@@ -58,7 +59,7 @@ class OnboardingViewModel @Inject constructor(
         loadGenres()
         viewModelScope.launch {
             movies.popular().onSuccess { page ->
-                _state.update { it.copy(mosaic = page.movies.filter { m -> m.posterPath != null }) }
+                _state.update { it.copy(mosaic = page.titles.filter { m -> m.posterPath != null }) }
             }
         }
     }
@@ -85,9 +86,9 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             val genreIds = _state.value.selectedGenreIds.toList()
             // Popular picks per chosen genre, interleaved so every genre shows up near the top.
-            val perGenre = genreIds.map { id -> async { movies.discoverByGenre(id) } }.awaitAll()
+            val perGenre = genreIds.map { id -> async { movies.discoverByGenre(MediaType.MOVIE, id) } }.awaitAll()
             val popular = movies.popular()
-            val lists = perGenre.mapNotNull { it.getOrNull() } + listOfNotNull(popular.getOrNull()?.movies)
+            val lists = perGenre.mapNotNull { it.getOrNull() } + listOfNotNull(popular.getOrNull()?.titles)
             if (lists.isEmpty()) {
                 val error = (perGenre + popular).firstNotNullOfOrNull { it.exceptionOrNull() }
                 _state.update { it.copy(isLoading = false, error = error?.toUserMessage()) }

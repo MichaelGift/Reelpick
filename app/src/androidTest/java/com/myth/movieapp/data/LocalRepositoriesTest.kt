@@ -12,6 +12,7 @@ import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.recommend.Recommendation
 import com.myth.movieapp.domain.recommend.RecommendationReason
 import com.myth.movieapp.testing.movie
+import com.myth.movieapp.testing.movieKey
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -47,10 +48,10 @@ class LocalRepositoriesTest {
         val stored = repo.feedback.first().single()
         assertEquals(arrival, stored.movie)
         assertEquals(FeedbackType.DISLIKE, stored.type)
-        assertEquals(FeedbackType.DISLIKE, repo.feedbackFor(1).first())
+        assertEquals(FeedbackType.DISLIKE, repo.feedbackFor(movieKey(1)).first())
 
-        repo.clearFeedback(1)
-        assertNull(repo.feedbackFor(1).first())
+        repo.clearFeedback(movieKey(1))
+        assertNull(repo.feedbackFor(movieKey(1)).first())
     }
 
     @Test
@@ -58,11 +59,11 @@ class LocalRepositoriesTest {
         val repo = WatchlistRepositoryImpl(db.watchlistDao(), clock)
 
         repo.add(movie(1))
-        assertTrue(repo.isInWatchlist(1).first())
+        assertTrue(repo.isInWatchlist(movieKey(1)).first())
         assertEquals(listOf(1), repo.watchlist.first().map { it.id })
 
-        repo.remove(1)
-        assertFalse(repo.isInWatchlist(1).first())
+        repo.remove(movieKey(1))
+        assertFalse(repo.isInWatchlist(movieKey(1)).first())
     }
 
     @Test

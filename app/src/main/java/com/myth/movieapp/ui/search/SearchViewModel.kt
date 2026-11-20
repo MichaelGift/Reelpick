@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myth.movieapp.domain.model.Genre
 import com.myth.movieapp.domain.model.Title
-import com.myth.movieapp.domain.model.PagedTitles
+import com.myth.movieapp.domain.model.MediaType
+import com.myth.movieapp.domain.model.PersonSummary
+import com.myth.movieapp.domain.model.SearchResults
 import com.myth.movieapp.domain.repository.TitleRepository
 import com.myth.movieapp.domain.repository.UserPreferencesRepository
 import com.myth.movieapp.ui.common.toUserMessage
@@ -22,6 +24,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,6 +34,8 @@ data class SearchUiState(
     /** Set while browsing a genre instead of searching by text. */
     val browsing: Genre? = null,
     val results: List<Title> = emptyList(),
+    /** People matching a text search (first page only); empty while browsing a genre. */
+    val people: List<PersonSummary> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val canLoadMore: Boolean = false,
@@ -102,7 +108,7 @@ class SearchViewModel @Inject constructor(
         searchJob = viewModelScope.launch {
             load(1).onSuccess { result ->
                 page = 1
-                _state.update { it.copy(results = result.movies, canLoadMore = result.hasMore, isLoading = false, searched = true) }
+                _state.update { it.copy(results = result.titles, canLoadMore = result.hasMore, isLoading = false, searched = true) }
             }.onFailure { e -> _state.update { it.copy(isLoading = false, error = e.toUserMessage()) } }
         }
     }
@@ -123,7 +129,7 @@ class SearchViewModel @Inject constructor(
                     page = result.page
                     _state.update {
                         it.copy(
-                            results = (it.results + result.movies).distinctBy(Title::id),
+                            results = (it.results + result.titles).distinctBy(Title::key),
                             canLoadMore = result.hasMore,
                             isLoadingMore = false,
                         )
@@ -134,14 +140,21 @@ class SearchViewModel @Inject constructor(
     }
 
     /** One page of either the text search or the genre being browsed. */
-    private suspend fun load(page: Int): Result<PagedTitles> {
-        val browsing = _state.value.browsing
-        return if (browsing != null) {
-            movies.discoverByGenre(browsing.id, page).map { PagedTitles(it, page, if (it.isEmpty()) page else MAX_BROWSE_PAGES) }
-        } else {
-            movies.search(_state.value.query.trim(), page)
+    private suspend fun load(page: Int): Result<SearchResults> {
+        val browsing = _state.value.browsing ?: return movies.search(_state.value.query.trim(), page)
+        // Browsing mixes films and series; it only fails if both fail.
+        val (films, series) = coroutineScope {
+            val films = async { movies.discoverByGenre(MediaType.MOVIE, browsing.id, page) }
+            val series = async { movies.discoverByGenre(MediaType.TV, browsing.id, page) }
+            films.await() to series.await()
         }
+        if (films.isFailure && series.isFailure) return Result.failure(films.exceptionOrNull()!!)
+        val titles = interleave(films.getOrDefault(emptyList()), series.getOrDefault(emptyList()))
+        return Result.success(SearchResults(titles, emptyList(), page, if (titles.isEmpty()) page else MAX_BROWSE_PAGES))
     }
+
+    private fun <T> interleave(a: List<T>, b: List<T>): List<T> =
+        (0 until maxOf(a.size, b.size)).flatMap { i -> listOfNotNull(a.getOrNull(i), b.getOrNull(i)) }
 
     private fun search(query: String) {
         if (query.isEmpty()) return
@@ -154,7 +167,8 @@ class SearchViewModel @Inject constructor(
                     page = 1
                     _state.update {
                         it.copy(
-                            results = result.movies,
+                            results = result.titles,
+                            people = result.people,
                             canLoadMore = result.hasMore,
                             isLoading = false,
                             searched = true,

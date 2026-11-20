@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.myth.movieapp.domain.model.FeedbackType
+import com.myth.movieapp.domain.model.MediaType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -13,14 +14,14 @@ interface FeedbackDao {
     @Query("SELECT * FROM feedback ORDER BY timestampMillis DESC")
     fun observeAll(): Flow<List<FeedbackEntity>>
 
-    @Query("SELECT type FROM feedback WHERE movieId = :movieId")
-    fun observeType(movieId: Int): Flow<FeedbackType?>
+    @Query("SELECT type FROM feedback WHERE mediaType = :mediaType AND titleId = :titleId")
+    fun observeType(mediaType: MediaType, titleId: Int): Flow<FeedbackType?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: FeedbackEntity)
 
-    @Query("DELETE FROM feedback WHERE movieId = :movieId")
-    suspend fun delete(movieId: Int)
+    @Query("DELETE FROM feedback WHERE mediaType = :mediaType AND titleId = :titleId")
+    suspend fun delete(mediaType: MediaType, titleId: Int)
 
     @Query("DELETE FROM feedback")
     suspend fun deleteAll()
@@ -31,14 +32,14 @@ interface WatchlistDao {
     @Query("SELECT * FROM watchlist ORDER BY addedAtMillis DESC")
     fun observeAll(): Flow<List<WatchlistEntity>>
 
-    @Query("SELECT EXISTS(SELECT 1 FROM watchlist WHERE movieId = :movieId)")
-    fun observeContains(movieId: Int): Flow<Boolean>
+    @Query("SELECT EXISTS(SELECT 1 FROM watchlist WHERE mediaType = :mediaType AND titleId = :titleId)")
+    fun observeContains(mediaType: MediaType, titleId: Int): Flow<Boolean>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: WatchlistEntity)
 
-    @Query("DELETE FROM watchlist WHERE movieId = :movieId")
-    suspend fun delete(movieId: Int)
+    @Query("DELETE FROM watchlist WHERE mediaType = :mediaType AND titleId = :titleId")
+    suspend fun delete(mediaType: MediaType, titleId: Int)
 }
 
 @Dao

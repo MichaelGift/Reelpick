@@ -26,7 +26,7 @@ class WatchlistViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun remove(movie: Title) {
-        viewModelScope.launch { watchlist.remove(movie.id) }
+        viewModelScope.launch { watchlist.remove(movie.key) }
     }
 
     fun restore(movie: Title) {
@@ -36,13 +36,13 @@ class WatchlistViewModel @Inject constructor(
     fun markWatched(movie: Title) {
         viewModelScope.launch {
             feedback.setFeedback(movie, FeedbackType.WATCHED)
-            watchlist.remove(movie.id)
+            watchlist.remove(movie.key)
         }
     }
 
     fun undoWatched(movie: Title) {
         viewModelScope.launch {
-            feedback.clearFeedback(movie.id)
+            feedback.clearFeedback(movie.key)
             watchlist.add(movie)
         }
     }

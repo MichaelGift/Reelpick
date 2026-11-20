@@ -1,5 +1,6 @@
 package com.myth.movieapp.domain.recommend
 
+import com.myth.movieapp.domain.model.MediaType
 import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.repository.TitleRepository
 import kotlinx.coroutines.async
@@ -29,10 +30,10 @@ class CandidateSource @Inject constructor(private val movies: TitleRepository) {
 
     suspend fun fetch(seeds: List<Title>, genreIds: List<Int>): Result<CandidatePool> = coroutineScope {
         val seedCalls = seeds.map { seed ->
-            async { CandidateOrigin.Seed(seed.id) to movies.recommendationsFor(seed.id) }
+            async { CandidateOrigin.Seed(seed.id) to movies.recommendationsFor(seed.key) }
         }
         val genreCalls = genreIds.map { genreId ->
-            async { CandidateOrigin.Genre(genreId) to movies.discoverByGenre(genreId) }
+            async { CandidateOrigin.Genre(genreId) to movies.discoverByGenre(MediaType.MOVIE, genreId) }
         }
         val trendingCall = async { CandidateOrigin.Trending to movies.trending() }
 

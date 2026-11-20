@@ -3,6 +3,10 @@ package com.myth.movieapp.domain.repository
 import com.myth.movieapp.domain.model.Feedback
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Genre
+import com.myth.movieapp.domain.model.MediaType
+import com.myth.movieapp.domain.model.Person
+import com.myth.movieapp.domain.model.SearchResults
+import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.domain.model.Title
 import com.myth.movieapp.domain.model.TitleDetails
 import com.myth.movieapp.domain.model.PagedTitles
@@ -13,30 +17,35 @@ import kotlinx.coroutines.flow.Flow
 
 /** Read-only access to TMDB. Every call returns a [Result] instead of throwing. */
 interface TitleRepository {
+    /** Movie genres plus the TV-only ones, in one id space (see GenreMap). */
     suspend fun genres(): Result<List<Genre>>
-    suspend fun popular(page: Int = 1): Result<PagedTitles>
-    suspend fun topRated(page: Int = 1): Result<PagedTitles>
-    suspend fun trending(): Result<List<Title>>
-    suspend fun recommendationsFor(movieId: Int): Result<List<Title>>
-    suspend fun discoverByGenre(genreId: Int, page: Int = 1): Result<List<Title>>
-    suspend fun search(query: String, page: Int = 1): Result<PagedTitles>
-    suspend fun details(movieId: Int, region: String): Result<TitleDetails>
+    suspend fun popular(type: MediaType = MediaType.MOVIE, page: Int = 1): Result<PagedTitles>
+    suspend fun topRated(type: MediaType = MediaType.MOVIE, page: Int = 1): Result<PagedTitles>
+    suspend fun trending(type: MediaType = MediaType.MOVIE): Result<List<Title>>
+    /** Recommendations of the same type as [key]: series for a series, films for a film. */
+    suspend fun recommendationsFor(key: TitleKey): Result<List<Title>>
+    /** Empty (not a failure) when [type] has no equivalent of [genreId], e.g. Horror for TV. */
+    suspend fun discoverByGenre(type: MediaType, genreId: Int, page: Int = 1): Result<List<Title>>
+    /** Films, series and people matching [query]. */
+    suspend fun search(query: String, page: Int = 1): Result<SearchResults>
+    suspend fun details(key: TitleKey, region: String): Result<TitleDetails>
+    suspend fun person(id: Int): Result<Person>
 }
 
-/** The user's explicit signals about movies: likes, dislikes, "not interested" and watched. */
+/** The user's explicit signals about titles: likes, dislikes, "not interested" and watched. */
 interface FeedbackRepository {
     val feedback: Flow<List<Feedback>>
-    fun feedbackFor(movieId: Int): Flow<FeedbackType?>
-    suspend fun setFeedback(movie: Title, type: FeedbackType)
-    suspend fun clearFeedback(movieId: Int)
+    fun feedbackFor(key: TitleKey): Flow<FeedbackType?>
+    suspend fun setFeedback(title: Title, type: FeedbackType)
+    suspend fun clearFeedback(key: TitleKey)
     suspend fun clearAll()
 }
 
 interface WatchlistRepository {
     val watchlist: Flow<List<Title>>
-    fun isInWatchlist(movieId: Int): Flow<Boolean>
-    suspend fun add(movie: Title)
-    suspend fun remove(movieId: Int)
+    fun isInWatchlist(key: TitleKey): Flow<Boolean>
+    suspend fun add(title: Title)
+    suspend fun remove(key: TitleKey)
 }
 
 interface UserPreferencesRepository {

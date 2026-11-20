@@ -21,6 +21,7 @@ import com.myth.movieapp.testing.FakeTitleRepository
 import com.myth.movieapp.testing.FakeUserPreferencesRepository
 import com.myth.movieapp.testing.FakeWatchlistRepository
 import com.myth.movieapp.testing.movie
+import com.myth.movieapp.testing.movieKey
 import com.myth.movieapp.ui.details.DetailsScreen
 import com.myth.movieapp.ui.details.DetailsViewModel
 import com.myth.movieapp.ui.onboarding.OnboardingScreen
@@ -79,7 +80,7 @@ class ScreenTests {
     @Test
     fun detailsWatchlistToggleUpdatesRepository() {
         val dune = movie(42, title = "Dune")
-        movies.details[42] = Result.success(
+        movies.details[movieKey(42)] = Result.success(
             TitleDetails(dune, tagline = null, runtimeMinutes = 155, genres = emptyList(), cast = emptyList(),
                 trailerYoutubeKey = null, watchProviders = null),
         )
@@ -92,7 +93,7 @@ class ScreenTests {
         compose.onAllNodesWithText("Dune").onFirst().assertExists()
         compose.onNodeWithText("Add to watchlist").performClick()
 
-        compose.waitUntil(5_000) { runBlocking { watchlist.isInWatchlist(42).first() } }
+        compose.waitUntil(5_000) { runBlocking { watchlist.isInWatchlist(movieKey(42)).first() } }
         compose.onNodeWithText("On your watchlist").assertExists()
         assertTrue(runBlocking { watchlist.watchlist.first() }.any { it.id == 42 })
     }

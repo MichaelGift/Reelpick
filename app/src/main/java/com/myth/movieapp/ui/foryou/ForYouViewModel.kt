@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myth.movieapp.domain.model.FeedbackType
 import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.recommend.GetForYouFeedUseCase
 import com.myth.movieapp.domain.repository.FeedbackRepository
@@ -31,7 +32,7 @@ data class ForYouUiState(
     val isRefreshing: Boolean = false,
     /** Shown full-screen when there is no feed yet, otherwise as a snackbar over the cached feed. */
     val error: String? = null,
-    val watchlistIds: Set<Int> = emptySet(),
+    val watchlistIds: Set<TitleKey> = emptySet(),
     /** One-off confirmation, e.g. after saving from the feed (saved movies leave the feed). */
     val notice: String? = null,
 )
@@ -55,7 +56,7 @@ class ForYouViewModel @Inject constructor(
             .launchIn(viewModelScope)
 
         watchlist.watchlist
-            .onEach { list -> _state.update { it.copy(watchlistIds = list.mapTo(mutableSetOf()) { m -> m.id }) } }
+            .onEach { list -> _state.update { it.copy(watchlistIds = list.mapTo(mutableSetOf()) { m -> m.key }) } }
             .launchIn(viewModelScope)
 
         // Any rating or watchlist change re-ranks; the use case decides whether that needs the network.
@@ -82,8 +83,8 @@ class ForYouViewModel @Inject constructor(
     }
 
     fun toggleWatchlist(movie: Title) {
-        if (movie.id in _state.value.watchlistIds) {
-            viewModelScope.launch { watchlist.remove(movie.id) }
+        if (movie.key in _state.value.watchlistIds) {
+            viewModelScope.launch { watchlist.remove(movie.key) }
         } else {
             addToWatchlist(movie)
         }

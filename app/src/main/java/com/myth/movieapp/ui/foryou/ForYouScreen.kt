@@ -60,6 +60,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.myth.movieapp.domain.model.Title
+import com.myth.movieapp.domain.model.TitleKey
 import com.myth.movieapp.domain.recommend.ForYouFeed
 import com.myth.movieapp.domain.recommend.Recommendation
 import com.myth.movieapp.domain.recommend.TasteSummary
@@ -164,7 +165,7 @@ private fun TopBar(listState: LazyListState) {
 private fun FeedContent(
     feed: ForYouFeed,
     listState: LazyListState,
-    watchlistIds: Set<Int>,
+    watchlistIds: Set<TitleKey>,
     onMovieClick: OpenTitle,
     onMovieLongClick: (Title) -> Unit,
     onToggleWatchlist: (Title) -> Unit,
@@ -252,7 +253,7 @@ private fun HeroPager(
     genreNames: Map<Int, String>,
     height: Dp,
     listState: LazyListState,
-    watchlistIds: Set<Int>,
+    watchlistIds: Set<TitleKey>,
     onOpen: (Title) -> Unit,
     onLongPress: (Title) -> Unit,
     onToggleWatchlist: (Title) -> Unit,
@@ -302,7 +303,7 @@ private fun HeroPager(
                 HeroCopy(
                     pick = pick,
                     genreNames = genreNames,
-                    inWatchlist = pick.movie.id in watchlistIds,
+                    inWatchlist = pick.movie.key in watchlistIds,
                     onOpen = { onOpen(pick.movie) },
                     onToggleWatchlist = { onToggleWatchlist(pick.movie) },
                     modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, end = 20.dp, bottom = 36.dp),

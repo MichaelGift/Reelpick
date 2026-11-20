@@ -69,6 +69,8 @@ android {
     sourceSets {
         getByName("test").kotlin.directories.add("src/sharedTest/java")
         getByName("androidTest").kotlin.directories.add("src/sharedTest/java")
+        // MigrationTestHelper reads the exported Room schemas as test assets.
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
     }
 }
 
@@ -121,4 +123,5 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.room.testing)
 }
